@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function Sucesso() {
+export default function Success() {
   const router = useRouter();
   const { date, time, specialty } = useLocalSearchParams();
 
@@ -10,15 +10,13 @@ export default function Sucesso() {
     <View style={styles.container}>
 
       {/* Voltar */}
-      <TouchableOpacity onPress={() => router.back()}
-        style={{ marginTop: 20}}
- >
+      <TouchableOpacity onPress={() => router.back()}>
         <Ionicons name="arrow-back-outline" size={24} />
       </TouchableOpacity>
 
       {/* Ícone */}
       <View style={styles.iconContainer}>
-        <Ionicons name="checkmark" size={60} color="#fff" />
+        <Ionicons name="checkmark" size={50} color="#fff" />
       </View>
 
       {/* Título */}
@@ -41,35 +39,30 @@ export default function Sucesso() {
 
       {/* Orientação */}
       <View style={{ marginTop: 20 }}>
-        <Text style={[styles.section, {textAlign: "left"}]}>Orientação</Text>
+        <Text style={styles.section}>Orientação</Text>
         <Text style={styles.text}>
           Chegar 15 minutos antes para realizar a triagem
         </Text>
       </View>
 
       {/* Logo */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("@/assets/images/logo-ubs.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.appName}>UBS Connect</Text>
+      <View style={styles.footer}>
+        <Text style={{ fontWeight: "bold" }}>UBS Connect</Text>
       </View>
-
     </View>
   );
 }
 
 function Info({ label, value }: any) {
   return (
-    <View style={{ width: "45%", marginBottom: 30, paddingLeft: 20}}>
+    <View style={{ width: "48%", marginBottom: 15 }}>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>
     </View>
   );
 }
 
+// 🔥 formata horário
 function formatTime(time: any) {
   if (!time) return "";
   if (time.includes("AM")) return time.replace("AM", "da manhã");
@@ -77,6 +70,7 @@ function formatTime(time: any) {
   return time;
 }
 
+// 🔥 formata especialidade
 function formatSpecialty(spec: any) {
   switch (spec) {
     case "clinica":
@@ -95,8 +89,7 @@ function formatSpecialty(spec: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 30,
-    marginTop: 10,
+    padding: 20,
     backgroundColor: "#f2f4f7",
   },
 
@@ -108,11 +101,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
 
   title: {
-    fontSize: 23,
+    fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
     marginTop: 10,
@@ -122,14 +115,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#555",
     marginBottom: 20,
-    fontSize:15,
   },
 
   section: {
     textAlign: "center",
-    marginBottom: 5,
+    marginBottom: 10,
     color: "#555",
-    fontSize: 15,
   },
 
   grid: {
@@ -148,21 +139,10 @@ const styles = StyleSheet.create({
 
   text: {
     color: "#555",
-    marginTop: -10,
   },
 
-  logoContainer: {
-    marginTop: -5,
+  footer: {
+    marginTop: 40,
     alignItems: "center",
-  },
-
-  logo: {
-    width: 200,
-    height: 125,
-  },
-
-  appName: {
-    fontWeight: "bold",
-    marginTop: -30,
   },
 });

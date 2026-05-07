@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Image,
   StyleSheet,
@@ -13,12 +13,38 @@ import {
 export default function Login() {
   const router = useRouter();
 
+  // 🔥 estados adicionados
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+
+  // 🔥 função de login
+  const handleLogin = () => {
+    let tipoUsuario = "";
+
+    if (usuario === "paciente") tipoUsuario = "paciente";
+    else if (usuario === "medico") tipoUsuario = "medico";
+    else if (usuario === "acs") tipoUsuario = "acs";
+    else if (usuario === "farmaceutico") tipoUsuario = "farmaceutico";
+
+    if (tipoUsuario === "paciente") {
+      router.replace("/(paciente)/(tabs)");
+    } else if (tipoUsuario === "medico") {
+      router.replace("/(medico)/(tabs)");
+    } else if (tipoUsuario === "acs") {
+      router.replace("/(agente)/(tabs)");
+    } else if (tipoUsuario === "farmaceutico") {
+      router.replace("/(farmaceutico)/(tabs)");
+    } else {
+      alert("Usuário inválido");
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
-          source={require("@/assets/images/logo-ubs.png")} // Imagem Logo
+          source={require("@/assets/images/logo-ubs.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -31,6 +57,8 @@ export default function Login() {
         <TextInput
           placeholder="Usuário"
           style={styles.input}
+          value={usuario}
+          onChangeText={setUsuario}
         />
       </View>
 
@@ -41,12 +69,14 @@ export default function Login() {
           placeholder="Senha"
           secureTextEntry
           style={styles.input}
+          value={senha}
+          onChangeText={setSenha}
         />
       </View>
 
       {/* Botão */}
-      <TouchableOpacity style={styles.button}onPress={() => router.replace("/(tabs)")}>
-    <Text style={styles.buttonText}>Entrar</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
       {/* Ajuda */}
@@ -58,9 +88,12 @@ export default function Login() {
       {/* Criar conta */}
       <Text style={styles.registerText}>
         Não possui uma conta?{" "}
-        <Text style={styles.link} onPress={() => router.replace("/register")}>
-    Criar conta
-    </Text>
+        <Text
+          style={styles.link}
+          onPress={() => router.replace("/(auth)/register")}
+        >
+          Criar conta
+        </Text>
       </Text>
 
     </View>

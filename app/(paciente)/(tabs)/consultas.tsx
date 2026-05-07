@@ -1,38 +1,25 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
-
+import React, { useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function Consultas() {
-  const router = useRouter();
-
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<any>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // 🔥 LIMPA AUTOMATICAMENTE AO ENTRAR NA TELA
-  useFocusEffect(
-    useCallback(() => {
-      setSelectedSpecialty(null);
-      setSelectedDate(null);
-      setSelectedTime(null);
-    }, [])
-  );
-
   const times = [
     "08:00 AM","08:30 AM","09:00 AM","09:30 AM",
-    "10:00 AM","10:30 AM","11:30 AM","13:00 PM",
-    "13:30 PM","14:00 PM","14:30 PM","15:00 PM",
+    "10:00 AM","10:30 AM","11:30 AM",
+    "13:00 PM","13:30 PM","14:00 PM","14:30 PM"
   ];
 
+  // 🔥 calendário horizontal
   const generateDates = () => {
     const days = [];
     const today = new Date();
@@ -65,13 +52,10 @@ export default function Consultas() {
 
   return (
     <ScrollView style={styles.container}>
-      
-      {/* Header: Voltar */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back-outline" size={24} />
-        </TouchableOpacity>
 
+      {/* Header */}
+      <View style={styles.header}>
+        <Ionicons name="arrow-back-outline" size={24} />
         <Text style={styles.title}>Consultas</Text>
       </View>
 
@@ -106,16 +90,20 @@ export default function Consultas() {
         />
       </ScrollView>
 
+      {/* 🚫 Bloqueia até escolher especialidade */}
       {!selectedSpecialty && (
         <Text style={styles.warning}>
           Selecione uma especialidade para continuar
         </Text>
       )}
 
+      {/* ✅ Libera resto */}
       {selectedSpecialty && (
         <>
+          {/* Mês */}
           <Text style={styles.section}>{currentMonth}</Text>
 
+          {/* Calendário horizontal */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {dates.map((item, index) => {
               const isSelected =
@@ -135,6 +123,7 @@ export default function Consultas() {
             })}
           </ScrollView>
 
+          {/* Horários */}
           <Text style={styles.section}>Selecione um Horário</Text>
 
           <View style={styles.timeContainer}>
@@ -157,6 +146,7 @@ export default function Consultas() {
         </>
       )}
 
+      {/* Info dinâmica */}
       {selectedDate && selectedTime && (
         <View style={styles.infoBox}>
           <Text style={{ fontWeight: "bold", textTransform: "capitalize" }}>
@@ -171,24 +161,13 @@ export default function Consultas() {
         </View>
       )}
 
+      {/* Paciente */}
       {selectedDate && selectedTime && (
         <>
           <Text style={styles.patient}>Paciente</Text>
           <Text>CPF 000.000.000-00</Text>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/sucesso",
-                params: {
-                  date: selectedDate.fullDate.toLocaleDateString("pt-BR"),
-                  time: selectedTime,
-                  specialty: selectedSpecialty,
-                },
-              })
-            }
-          >
+          <TouchableOpacity style={styles.button}>
             <Text style={styles.buttonText}>Confirmar Agendamento</Text>
           </TouchableOpacity>
         </>
@@ -197,7 +176,7 @@ export default function Consultas() {
   );
 }
 
-// Componente especialidade
+// 🔥 Componente especialidade
 function Specialty({ icon, title, selected, onPress }: any) {
   return (
     <TouchableOpacity
@@ -220,24 +199,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f2f4f7",
-    padding: 10,
+    padding: 16,
   },
 
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginTop: 30,
   },
 
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#3a7ca5",
   },
 
   subtitle: {
-    fontSize: 15,
     marginTop: 10,
     fontWeight: "bold",
   },
@@ -254,11 +231,11 @@ const styles = StyleSheet.create({
 
   specialty: {
     backgroundColor: "#fff",
-    padding: 10,
+    padding: 12,
     borderRadius: 10,
-    marginRight: 5,
+    marginRight: 10,
     alignItems: "center",
-    width: 115,
+    width: 100,
   },
 
   selectedSpecialty: {
@@ -266,7 +243,7 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    marginTop: 15,
+    marginTop: 20,
     marginBottom: 10,
     fontWeight: "bold",
     textTransform: "capitalize",
@@ -274,11 +251,11 @@ const styles = StyleSheet.create({
 
   dateBox: {
     backgroundColor: "#fff",
-    padding: 5,
+    padding: 10,
     borderRadius: 10,
     marginRight: 10,
     alignItems: "center",
-    width: 80,
+    width: 70,
   },
 
   selectedDate: {
@@ -286,12 +263,12 @@ const styles = StyleSheet.create({
   },
 
   weekText: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#555",
   },
 
   dayText: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "bold",
   },
 
@@ -301,17 +278,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  timeText: {
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  
-
   timeBox: {
     backgroundColor: "#fff",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 5,
+    marginBottom: 10,
     width: "30%",
     alignItems: "center",
   },
@@ -325,18 +296,16 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginTop: 15,
-    fontSize: 10,
   },
 
   patient: {
     marginTop: 15,
     fontWeight: "bold",
-    fontSize: 12,
   },
 
   button: {
     backgroundColor: "#4a90c2",
-    padding: 10,
+    padding: 15,
     borderRadius: 10,
     marginTop: 15,
     alignItems: "center",
