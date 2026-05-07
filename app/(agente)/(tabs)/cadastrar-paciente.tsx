@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, TextInput, View } from "react-native";
-import { useApp } from "./context";
+import { useApp } from "../../../context/app-context";
 
 export default function Cadastrar() {
   const [nome, setNome] = useState("");

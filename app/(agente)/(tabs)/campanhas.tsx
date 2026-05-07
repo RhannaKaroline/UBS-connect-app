@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
-import { useApp } from "./context";
+import { useApp } from "../../../context/app-context";
 
 export default function Campanhas() {
   const { campanhas, addCampanha } = useApp();

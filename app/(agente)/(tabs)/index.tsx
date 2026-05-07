@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { useApp } from "../context/app-context";
+import { useApp } from "../../../context/app-context";
 
 export default function Home() {
   const { pacientes, campanhas } = useApp();
