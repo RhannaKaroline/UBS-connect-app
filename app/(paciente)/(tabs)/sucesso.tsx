@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function Success() {
+export default function Sucesso() {
   const router = useRouter();
   const { date, time, specialty } = useLocalSearchParams();
 
@@ -16,7 +16,7 @@ export default function Success() {
 
       {/* Ícone */}
       <View style={styles.iconContainer}>
-        <Ionicons name="checkmark" size={50} color="#fff" />
+        <Ionicons name="checkmark" size={60} color="#fff" />
       </View>
 
       {/* Título */}
@@ -46,9 +46,15 @@ export default function Success() {
       </View>
 
       {/* Logo */}
-      <View style={styles.footer}>
-        <Text style={{ fontWeight: "bold" }}>UBS Connect</Text>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require("@/assets/images/logo-ubs.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.appName}>UBS Connect</Text>
       </View>
+
     </View>
   );
 }
@@ -62,7 +68,6 @@ function Info({ label, value }: any) {
   );
 }
 
-// 🔥 formata horário
 function formatTime(time: any) {
   if (!time) return "";
   if (time.includes("AM")) return time.replace("AM", "da manhã");
@@ -70,7 +75,6 @@ function formatTime(time: any) {
   return time;
 }
 
-// 🔥 formata especialidade
 function formatSpecialty(spec: any) {
   switch (spec) {
     case "clinica":
@@ -141,8 +145,18 @@ const styles = StyleSheet.create({
     color: "#555",
   },
 
-  footer: {
+  logoContainer: {
     marginTop: 40,
     alignItems: "center",
+  },
+
+  logo: {
+    width: 120,
+    height: 80,
+  },
+
+  appName: {
+    fontWeight: "bold",
+    marginTop: 5,
   },
 });

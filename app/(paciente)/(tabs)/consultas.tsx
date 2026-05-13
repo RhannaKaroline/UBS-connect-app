@@ -1,25 +1,40 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Consultas() {
+  const router = useRouter();
+
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<any>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const times = [
-    "08:00 AM","08:30 AM","09:00 AM","09:30 AM",
-    "10:00 AM","10:30 AM","11:30 AM",
-    "13:00 PM","13:30 PM","14:00 PM","14:30 PM"
+    "7:30 AM","08:00 AM","08:30 AM","09:00 AM",
+    "09:30 AM","10:00 AM","10:30 AM","11:30 AM",
+    "13:00 PM","13:30 PM","14:00 PM","14:30 PM",
+    "15:00 PM","15:30 PM","16:00 PM","16:30 PM",
+    "17:00 PM","17:30 PM"
   ];
 
-  // 🔥 calendário horizontal
+  // 🔥 LIMPA TUDO AO SAIR DA TELA
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setSelectedSpecialty(null);
+        setSelectedDate(null);
+        setSelectedTime(null);
+      };
+    }, [])
+  );
+
   const generateDates = () => {
     const days = [];
     const today = new Date();
@@ -50,60 +65,92 @@ export default function Consultas() {
       year: "numeric",
     });
 
+  function handleConfirm() {
+    if (!selectedSpecialty || !selectedDate || !selectedTime) return;
+
+    router.push({
+      pathname: "/sucesso",
+      params: {
+        date: selectedDate.fullDate.toLocaleDateString("pt-BR"),
+        time: selectedTime,
+        specialty: selectedSpecialty,
+      },
+    });
+  }
+
   return (
     <ScrollView style={styles.container}>
 
-      {/* Header */}
+      {/* HEADER COM VOLTAR FUNCIONANDO */}
       <View style={styles.header}>
-        <Ionicons name="arrow-back-outline" size={24} />
+        <TouchableOpacity onPress={() => router.push("/")}>
+          <Ionicons name="arrow-back-outline" size={24} />
+        </TouchableOpacity>
+
         <Text style={styles.title}>Consultas</Text>
       </View>
 
-      {/* Especialidades */}
+      {/* ESPECIALIDADES */}
       <Text style={styles.subtitle}>Agendar uma consulta?</Text>
       <Text style={styles.label}>Escolha uma especialidade</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <Specialty
           icon="stethoscope"
-          title="Clínica - Geral"
+          title="Clínica Geral"
           selected={selectedSpecialty === "clinica"}
-          onPress={() => setSelectedSpecialty("clinica")}
+          onPress={() =>
+            setSelectedSpecialty(
+              selectedSpecialty === "clinica" ? null : "clinica"
+            )
+          }
         />
+
         <Specialty
           icon="tooth-outline"
           title="Odontologia"
           selected={selectedSpecialty === "odonto"}
-          onPress={() => setSelectedSpecialty("odonto")}
+          onPress={() =>
+            setSelectedSpecialty(
+              selectedSpecialty === "odonto" ? null : "odonto"
+            )
+          }
         />
+
         <Specialty
           icon="needle"
           title="Vacinação"
           selected={selectedSpecialty === "vacina"}
-          onPress={() => setSelectedSpecialty("vacina")}
+          onPress={() =>
+            setSelectedSpecialty(
+              selectedSpecialty === "vacina" ? null : "vacina"
+            )
+          }
         />
+
         <Specialty
           icon="baby-face-outline"
           title="Pediatria"
           selected={selectedSpecialty === "pediatria"}
-          onPress={() => setSelectedSpecialty("pediatria")}
+          onPress={() =>
+            setSelectedSpecialty(
+              selectedSpecialty === "pediatria" ? null : "pediatria"
+            )
+          }
         />
       </ScrollView>
 
-      {/* 🚫 Bloqueia até escolher especialidade */}
       {!selectedSpecialty && (
         <Text style={styles.warning}>
           Selecione uma especialidade para continuar
         </Text>
       )}
 
-      {/* ✅ Libera resto */}
+      {/* CALENDÁRIO */}
       {selectedSpecialty && (
         <>
-          {/* Mês */}
           <Text style={styles.section}>{currentMonth}</Text>
 
-          {/* Calendário horizontal */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {dates.map((item, index) => {
               const isSelected =
@@ -123,7 +170,7 @@ export default function Consultas() {
             })}
           </ScrollView>
 
-          {/* Horários */}
+          {/* HORÁRIOS */}
           <Text style={styles.section}>Selecione um Horário</Text>
 
           <View style={styles.timeContainer}>
@@ -136,7 +183,11 @@ export default function Consultas() {
                   style={[styles.timeBox, isSelected && styles.selectedTime]}
                   onPress={() => setSelectedTime(time)}
                 >
-                  <Text style={{ color: isSelected ? "#fff" : "#000" }}>
+                  <Text
+                    style={{ color: isSelected ? "#fff" : "#000" }}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
                     {time}
                   </Text>
                 </TouchableOpacity>
@@ -146,7 +197,7 @@ export default function Consultas() {
         </>
       )}
 
-      {/* Info dinâmica */}
+      {/* INFO */}
       {selectedDate && selectedTime && (
         <View style={styles.infoBox}>
           <Text style={{ fontWeight: "bold", textTransform: "capitalize" }}>
@@ -154,20 +205,18 @@ export default function Consultas() {
               weekday: "long",
             })}
           </Text>
-          <Text>
-            {selectedDate.fullDate.toLocaleDateString("pt-BR")}
-          </Text>
+          <Text>{selectedDate.fullDate.toLocaleDateString("pt-BR")}</Text>
           <Text>Horário disponível às {selectedTime}</Text>
         </View>
       )}
 
-      {/* Paciente */}
+      {/* BOTÃO */}
       {selectedDate && selectedTime && (
         <>
           <Text style={styles.patient}>Paciente</Text>
           <Text>CPF 000.000.000-00</Text>
 
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={handleConfirm}>
             <Text style={styles.buttonText}>Confirmar Agendamento</Text>
           </TouchableOpacity>
         </>
@@ -176,7 +225,7 @@ export default function Consultas() {
   );
 }
 
-// 🔥 Componente especialidade
+/* COMPONENTE ESPECIALIDADE */
 function Specialty({ icon, title, selected, onPress }: any) {
   return (
     <TouchableOpacity
@@ -188,13 +237,24 @@ function Specialty({ icon, title, selected, onPress }: any) {
         size={26}
         color={selected ? "#fff" : "#000"}
       />
-      <Text style={{ fontSize: 12, marginTop: 5, color: selected ? "#fff" : "#000" }}>
+
+      <Text
+        style={{
+          fontSize: 12,
+          marginTop: 6,
+          textAlign: "center",
+          color: selected ? "#fff" : "#000",
+        }}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+      >
         {title}
       </Text>
     </TouchableOpacity>
   );
 }
 
+/* STYLES */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -231,11 +291,13 @@ const styles = StyleSheet.create({
 
   specialty: {
     backgroundColor: "#fff",
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: 10,
     marginRight: 10,
     alignItems: "center",
-    width: 100,
+    justifyContent: "center",
+    minWidth: 130,
   },
 
   selectedSpecialty: {
@@ -283,7 +345,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
-    width: "30%",
+    width: "31%",
     alignItems: "center",
   },
 

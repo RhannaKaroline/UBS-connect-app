@@ -28,14 +28,6 @@ export default function Login() {
 
     if (tipoUsuario === "paciente") {
       router.replace("/(paciente)/(tabs)");
-    } else if (tipoUsuario === "medico") {
-      router.replace("/(medico)/(tabs)");
-    } else if (tipoUsuario === "acs") {
-      router.replace("/(agente)/(tabs)");
-    } else if (tipoUsuario === "farmaceutico") {
-      router.replace("/(farmaceutico)/(tabs)");
-    } else {
-      alert("Usuário inválido");
     }
   };
 

@@ -1,4 +1,5 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -9,9 +10,12 @@ import {
 } from "react-native";
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.userInfo}>
@@ -33,18 +37,25 @@ export default function HomeScreen() {
           <ServiceCard
             icon={<FontAwesome5 name="calendar-check" size={22} color="#ff4d6d" />}
             title="Consultas"
+            onPress={() => router.push("/consultas")}
           />
+
           <ServiceCard
             icon={<MaterialIcons name="local-pharmacy" size={24} color="#ff7a00" />}
             title="Medicamentos"
+            onPress={() => router.push("/medicamentos")}
           />
+
           <ServiceCard
             icon={<Ionicons name="document-text-outline" size={24} color="#5a8dee" />}
             title="Histórico"
+            onPress={() => router.push("/historico")}
           />
+
           <ServiceCard
             icon={<Ionicons name="location-outline" size={24} color="#22c55e" />}
             title="Localizar UBS"
+            onPress={() => router.push("/localizar-ubs")}
           />
         </View>
 
@@ -74,15 +85,21 @@ export default function HomeScreen() {
   );
 }
 
-function ServiceCard({ icon, title }: any) {
+/* 🔥 CARD DE SERVIÇOS COM NAVEGAÇÃO */
+function ServiceCard({ icon, title, onPress }: any) {
   return (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       {icon}
       <Text style={styles.cardText}>{title}</Text>
     </TouchableOpacity>
   );
 }
 
+/* CAMPANHAS */
 function CampaignCard({ bg, text, highlight }: any) {
   return (
     <View style={[styles.campaign, { backgroundColor: bg }]}>
