@@ -26,10 +26,23 @@ export default function Login() {
     else if (usuario === "acs") tipoUsuario = "acs";
     else if (usuario === "farmaceutico") tipoUsuario = "farmaceutico";
 
-    if (tipoUsuario === "paciente") {
-      router.replace("/(paciente)/(tabs)");
-    }
-  };
+    const handleLogin = () => {
+  if (usuario === "paciente") {
+    router.replace("/(paciente)/(tabs)");
+  }
+
+  else if (usuario === "medico") {
+    router.replace("/(medico)/(tabs)")
+  }
+
+  else if (usuario === "acs") {
+    router.replace("/(agente)/(tabs)");
+  }
+
+  else if (usuario === "farmaceutico") {
+    router.replace("/(farmaceutico)/(tabs)");
+  }
+};
 
   return (
     <View style={styles.container}>
