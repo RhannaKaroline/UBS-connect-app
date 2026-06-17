@@ -7,42 +7,28 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 export default function Login() {
   const router = useRouter();
 
-  // 🔥 estados adicionados
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
 
-  // 🔥 função de login
   const handleLogin = () => {
-    let tipoUsuario = "";
-
-    if (usuario === "paciente") tipoUsuario = "paciente";
-    else if (usuario === "medico") tipoUsuario = "medico";
-    else if (usuario === "acs") tipoUsuario = "acs";
-    else if (usuario === "farmaceutico") tipoUsuario = "farmaceutico";
-
-    const handleLogin = () => {
-  if (usuario === "paciente") {
-    router.replace("/(paciente)/(tabs)");
-  }
-
-  else if (usuario === "medico") {
-    router.replace("/(medico)/(tabs)")
-  }
-
-  else if (usuario === "acs") {
-    router.replace("/(agente)/(tabs)");
-  }
-
-  else if (usuario === "farmaceutico") {
-    router.replace("/(farmaceutico)/(tabs)");
-  }
-};
+    if (usuario === "paciente") {
+      router.replace("/(paciente)/(tabs)");
+    } else if (usuario === "medico") {
+      router.replace("/(medico)/(tabs)/index" as any);
+    } else if (usuario === "acs") {
+      router.replace("/(agente)/(tabs)");
+    } else if (usuario === "farmaceutico") {
+      router.replace("/(farmaceutico)/(tabs)");
+    } else {
+      alert("Usuário não encontrado!");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -56,7 +42,7 @@ export default function Login() {
         <Text style={styles.title}>UBS Connect</Text>
       </View>
 
-      {/* Input Usuário */}
+      {/* Usuário */}
       <View style={styles.inputContainer}>
         <Ionicons name="person-outline" size={20} color="#555" />
         <TextInput
@@ -67,7 +53,7 @@ export default function Login() {
         />
       </View>
 
-      {/* Input Senha */}
+      {/* Senha */}
       <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
@@ -79,7 +65,7 @@ export default function Login() {
         />
       </View>
 
-      {/* Botão */}
+      {/* Botão Login */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
@@ -90,7 +76,7 @@ export default function Login() {
         <Text style={styles.link}>Obtenha ajuda para entrar</Text>
       </Text>
 
-      {/* Criar conta */}
+      {/* Cadastro */}
       <Text style={styles.registerText}>
         Não possui uma conta?{" "}
         <Text
@@ -100,7 +86,6 @@ export default function Login() {
           Criar conta
         </Text>
       </Text>
-
     </View>
   );
 }
