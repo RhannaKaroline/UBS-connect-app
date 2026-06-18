@@ -18,17 +18,25 @@ export default function HomeScreen() {
         
         {/* Header */}
         <View style={styles.header}>
+          <Ionicons name="chevron-back" size={24} color="#333" />
           <View style={styles.userInfo}>
             <Ionicons name="person-circle-outline" size={50} color="#9db4c0" />
-            <View>
-              <Text style={styles.hello}>Olá, paciente</Text>
-              <Text style={styles.title}>
-                Bem-vindo ao <Text style={{ color: "#2b7bb9" }}>UBS Connect</Text>
-              </Text>
-            </View>
+            <Text style={styles.hello}>Olá, paciente</Text>
           </View>
-          <Ionicons name="search-outline" size={24} />
+          <View style={styles.headerIcons}>
+            <TouchableOpacity onPress={() => {}}>
+              <Ionicons name="notifications-outline" size={24} color="#333" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {}}>
+              <Ionicons name="chatbubble-ellipses-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Welcome */}
+        <Text style={styles.welcome}>
+          Bem-vindo ao <Text style={{ color: "#2b7bb9", fontWeight: "bold" }}>UBS Connect</Text> 🏠📱
+        </Text>
 
         {/* Serviços */}
         <Text style={styles.sectionTitle}>Serviços</Text>
@@ -36,57 +44,69 @@ export default function HomeScreen() {
         <View style={styles.grid}>
           <ServiceCard
             icon={<FontAwesome5 name="calendar-check" size={22} color="#ff4d6d" />}
-            title="Consultas"
+            number="1"
+            title="Consultas Agendadas"
             onPress={() => router.push("/consultas")}
           />
 
           <ServiceCard
             icon={<MaterialIcons name="local-pharmacy" size={24} color="#ff7a00" />}
-            title="Medicamentos"
+            number="35"
+            title="Medicações Disponíveis"
             onPress={() => router.push("/medicamentos")}
           />
 
           <ServiceCard
-            icon={<Ionicons name="document-text-outline" size={24} color="#5a8dee" />}
-            title="Histórico"
+            icon={<Ionicons name="document-text-outline" size={24} color="#7c3aed" />}
+            number="3"
+            title="Históricos"
             onPress={() => router.push("/historico")}
           />
 
           <ServiceCard
             icon={<Ionicons name="location-outline" size={24} color="#22c55e" />}
-            title="Localizar UBS"
+            number="6"
+            title="Localização de UBS's"
             onPress={() => router.push("/localizar-ubs")}
           />
         </View>
 
-        {/* Campanhas */}
-        <Text style={styles.sectionTitle}>Campanhas de saúde</Text>
+        {/* Ações Rápidas */}
+        <Text style={styles.sectionTitle}>Ações Rápidas</Text>
 
-        <CampaignCard
-          bg="#cfe3f5"
-          text="Promover a inclusão, o respeito e a compreensão das pessoas com Transtorno do Espectro Autista (TEA)..."
-          highlight="Abril azul: Conscientização do autismo"
-        />
+        <View style={styles.quickActions}>
+          <QuickAction
+            icon={<FontAwesome5 name="calendar-check" size={20} color="#ff4d6d" />}
+            title="Agendar Consulta"
+            onPress={() => router.push("/consultas")}
+          />
 
-        <CampaignCard
-          bg="#c9e7d3"
-          text="A prevenção de acidentes e o cuidado com a saúde no ambiente de trabalho são fundamentais..."
-        />
+          <QuickAction
+            icon={<MaterialIcons name="local-pharmacy" size={20} color="#ff7a00" />}
+            title="Medicamentos Disponíveis"
+            onPress={() => router.push("/medicamentos")}
+          />
+
+          <QuickAction
+            icon={<Ionicons name="document-text-outline" size={20} color="#7c3aed" />}
+            title="Visualizar Históricos"
+            onPress={() => router.push("/historico")}
+          />
+
+          <QuickAction
+            icon={<Ionicons name="location-outline" size={20} color="#22c55e" />}
+            title="Localizar UBS próxima"
+            onPress={() => router.push("/localizar-ubs")}
+          />
+        </View>
+
       </ScrollView>
-
-      {/* Bottom Tab */}
-      <View style={styles.tabBar}>
-        <Ionicons name="home-outline" size={24} color="#2b7bb9" />
-        <Ionicons name="notifications-outline" size={24} />
-        <Ionicons name="person-outline" size={24} />
-        <Ionicons name="settings-outline" size={24} />
-      </View>
     </View>
   );
 }
 
-/* 🔥 CARD DE SERVIÇOS COM NAVEGAÇÃO */
-function ServiceCard({ icon, title, onPress }: any) {
+/* CARD DE SERVIÇOS COM NAVEGAÇÃO */
+function ServiceCard({ icon, number, title, onPress }: any) {
   return (
     <TouchableOpacity
       style={styles.card}
@@ -94,27 +114,26 @@ function ServiceCard({ icon, title, onPress }: any) {
       activeOpacity={0.7}
     >
       {icon}
+      <Text style={styles.cardNumber}>{number}</Text>
       <Text style={styles.cardText}>{title}</Text>
     </TouchableOpacity>
   );
 }
 
-/* CAMPANHAS */
-function CampaignCard({ bg, text, highlight }: any) {
+/* AÇÕES RÁPIDAS */
+function QuickAction({ icon, title, onPress }: any) {
   return (
-    <View style={[styles.campaign, { backgroundColor: bg }]}>
-      <Text style={styles.campaignText}>{text}</Text>
-
-      {highlight && (
-        <Text style={styles.highlight}>{highlight}</Text>
-      )}
-
-      {highlight && (
-        <TouchableOpacity style={styles.button}>
-          <Text style={{ color: "#fff" }}>Saiba mais</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    <TouchableOpacity
+      style={styles.quickAction}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.quickActionLeft}>
+        {icon}
+        <Text style={styles.quickActionText}>{title}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color="#999" />
+    </TouchableOpacity>
   );
 }
 
@@ -135,16 +154,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     alignItems: "center",
+    flex: 1,
+  },
+
+  headerIcons: {
+    flexDirection: "row",
+    gap: 16,
+    alignItems: "center",
   },
 
   hello: {
-    fontSize: 14,
-    color: "#555",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
   },
 
-  title: {
+  welcome: {
     fontSize: 16,
-    fontWeight: "bold",
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 16,
+    color: "#333",
   },
 
   sectionTitle: {
@@ -153,6 +183,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 10,
     marginBottom: 8,
+    textDecorationLine: "underline",
   },
 
   grid: {
@@ -171,46 +202,42 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  cardText: {
+  cardNumber: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#333",
     marginTop: 8,
-    fontSize: 14,
-    fontWeight: "500",
   },
 
-  campaign: {
+  cardText: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 4,
+  },
+
+  quickActions: {
     marginHorizontal: 16,
-    marginBottom: 12,
+  },
+
+  quickAction: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
+    marginBottom: 8,
+    elevation: 2,
   },
 
-  campaignText: {
-    fontSize: 13,
-    marginBottom: 10,
-  },
-
-  highlight: {
-    backgroundColor: "#fff",
-    padding: 6,
-    borderRadius: 6,
-    marginBottom: 10,
-    alignSelf: "flex-start",
-  },
-
-  button: {
-    backgroundColor: "#2b7bb9",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-  },
-
-  tabBar: {
+  quickActionLeft: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 0.5,
-    borderColor: "#ccc",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  quickActionText: {
+    fontSize: 15,
+    color: "#333",
   },
 });

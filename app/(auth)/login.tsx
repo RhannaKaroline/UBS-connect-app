@@ -71,7 +71,7 @@ export default function Login() {
           style={styles.input}
           value={usuario}
           onChangeText={setUsuario}
-          accessibilityLabel="Usuário"
+
         />
       </View>
 
@@ -84,7 +84,6 @@ export default function Login() {
           style={styles.input}
           value={senha}
           onChangeText={setSenha}
-          accessibilityLabel="Senha"
         />
         <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
           <Ionicons
@@ -99,7 +98,7 @@ export default function Login() {
       <TouchableOpacity
         style={styles.button}
         onPress={handleLogin}
-        accessibilityLabel="Entrar"
+
       >
         <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
@@ -111,15 +110,15 @@ export default function Login() {
       </Text>
 
       {/* Cadastro */}
-      <Text style={styles.registerText}>
-        Não possui uma conta?{" "}
-        <Text
-          style={styles.link}
-          onPress={() => router.navigate("/(auth)/register")}
-        >
-          Criar conta
+      <TouchableOpacity
+        onPress={() => router.navigate("/(auth)/register")}
+        testID="Criar conta"
+      >
+        <Text style={styles.registerText}>
+          {"Não possui uma conta? "}
+          <Text style={styles.link}>Criar conta</Text>
         </Text>
-      </Text>
+      </TouchableOpacity>
     </View>
   );
 }

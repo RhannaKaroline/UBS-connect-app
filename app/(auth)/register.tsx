@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
   Modal,
   ScrollView,
   StyleSheet,
@@ -68,8 +69,21 @@ export default function Register() {
         ])
       },
       onError: (error: any) => {
-        const msg = error.response?.data?.erro || "Erro ao conectar ao servidor"
-        Alert.alert("Erro", msg)
+        if (error.response) {
+          const status = error.response.status
+          const msg = error.response.data?.erro || "Erro desconhecido do servidor."
+          if (status === 409) {
+            Alert.alert("Conflito", msg)
+          } else if (status === 400) {
+            Alert.alert("Dados inválidos", msg)
+          } else {
+            Alert.alert("Erro", msg)
+          }
+        } else if (error.request) {
+          Alert.alert("Sem conexão", "Não foi possível conectar ao servidor. Verifique sua internet.")
+        } else {
+          Alert.alert("Erro", "Ocorreu um erro inesperado. Tente novamente.")
+        }
       },
     })
   }
@@ -108,7 +122,6 @@ export default function Register() {
           style={styles.input}
           value={nome}
           onChangeText={setNome}
-          accessibilityLabel="Nome completo"
         />
       </View>
 
@@ -120,7 +133,6 @@ export default function Register() {
           style={styles.input}
           value={identificador}
           onChangeText={setIdentificador}
-          accessibilityLabel={CAMPOS_TIPO[tipo].placeholder}
         />
       </View>
 
@@ -152,7 +164,6 @@ export default function Register() {
           style={styles.input}
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
-          accessibilityLabel="Confirmar senha"
         />
       </View>
 
@@ -337,6 +348,20 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 10,
+  },
+
+  dismissButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    marginBottom: 6,
+    paddingVertical: 4,
+  },
+
+  dismissText: {
+    fontSize: 12,
+    color: "#555",
   },
 
   button: {

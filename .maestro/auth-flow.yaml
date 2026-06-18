@@ -1,5 +1,6 @@
 appId: host.exp.exponent
 ---
+# Register
 - runFlow: _restart.yaml
 - tapOn: "Usuário"
 - tapOn:
@@ -19,3 +20,15 @@ appId: host.exp.exponent
 - tapOn: "Criar Conta"
 - tapOn: "Cadastrar"
 - assertVisible: "Sucesso"
+- tapOn: "OK"
+
+# Restart app between tests
+- runFlow: _restart.yaml
+- tapOn: "Usuário"
+
+# Login
+- inputText: "11122233344"
+- tapOn: "Senha"
+- inputText: "123456"
+- hideKeyboard
+- tapOn: "Entrar"
