@@ -1,0 +1,16 @@
+appId: "ubsconnectapp"
+---
+- launchApp
+- tapOn: "Criar conta"
+- tapOn: "Tipo de usuário"
+- tapOn: "Paciente"
+- tapOn: "Nome completo"
+- inputText: "Maria Teste"
+- tapOn: "CPF"
+- inputText: "98765432100"
+- tapOn: "Senha"
+- inputText: "123456"
+- tapOn: "Confirmar senha"
+- inputText: "123456"
+- tapOn: "Cadastrar"
+- assertVisible: "Sucesso"

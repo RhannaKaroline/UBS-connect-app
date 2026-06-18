@@ -108,6 +108,7 @@ export default function Register() {
           style={styles.input}
           value={nome}
           onChangeText={setNome}
+          accessibilityLabel="Nome completo"
         />
       </View>
 
@@ -119,6 +120,7 @@ export default function Register() {
           style={styles.input}
           value={identificador}
           onChangeText={setIdentificador}
+          accessibilityLabel={CAMPOS_TIPO[tipo].placeholder}
         />
       </View>
 
@@ -150,6 +152,7 @@ export default function Register() {
           style={styles.input}
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
+          accessibilityLabel="Confirmar senha"
         />
       </View>
 
@@ -165,6 +168,7 @@ export default function Register() {
           <Text style={styles.buttonText}>Cadastrar</Text>
         )}
       </TouchableOpacity>
+
 
       {/* Voltar pro login */}
       <Text style={styles.registerText}>

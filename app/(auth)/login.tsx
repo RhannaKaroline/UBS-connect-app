@@ -71,6 +71,7 @@ export default function Login() {
           style={styles.input}
           value={usuario}
           onChangeText={setUsuario}
+          accessibilityLabel="Usuário"
         />
       </View>
 
@@ -83,6 +84,7 @@ export default function Login() {
           style={styles.input}
           value={senha}
           onChangeText={setSenha}
+          accessibilityLabel="Senha"
         />
         <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
           <Ionicons
@@ -94,7 +96,11 @@ export default function Login() {
       </View>
 
       {/* Botão Login */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        accessibilityLabel="Entrar"
+      >
         <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
