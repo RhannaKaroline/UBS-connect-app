@@ -1,4 +1,4 @@
-appId: "ubsconnectapp"
+appId: host.exp.exponent
 ---
 - launchApp
 - tapOn: "Criar conta"
