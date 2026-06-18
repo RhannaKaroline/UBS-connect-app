@@ -1,33 +1,54 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons"
+import { useRouter } from "expo-router"
+import React, { useState } from "react"
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from "react-native";
+} from "react-native"
+import { useLogin } from "@/src/hooks/use-auth"
+import { useAuthStore } from "@/src/stores/auth-store"
 
 export default function Login() {
-  const router = useRouter();
+  const router = useRouter()
+  const user = useAuthStore((s) => s.user)
 
-  const [usuario, setUsuario] = useState("");
-  const [senha, setSenha] = useState("");
+  const [usuario, setUsuario] = useState("")
+  const [senha, setSenha] = useState("")
+  const [mostrarSenha, setMostrarSenha] = useState(false)
+
+  const { mutate: login, isPending } = useLogin()
 
   const handleLogin = () => {
-    if (usuario === "paciente") {
-      router.replace("/(paciente)/(tabs)");
-    } else if (usuario === "medico") {
-      router.replace("/(medico)/(tabs)/index" as any);
-    } else if (usuario === "acs") {
-      router.replace("/(agente)/(tabs)");
-    } else if (usuario === "farmaceutico") {
-      router.replace("/(farmaceutico)/(tabs)");
-    } else {
-      alert("Usuário não encontrado!");
-    }
+    login(
+      { identificador: usuario, senha },
+      {
+        onSuccess: (data) => {
+          const tipo = data.usuario.tipo_usuario
+          const rotas: Record<string, string> = {
+            paciente: "/(paciente)/(tabs)",
+            medico: "/(medico)/(tabs)",
+            agente_saude: "/(agente)/(tabs)",
+            farmaceutico: "/(farmaceutico)/(tabs)",
+          }
+          const destino = rotas[tipo]
+          if (destino) {
+            router.replace(destino as any)
+          } else {
+            Alert.alert("Erro", "Tipo de usuário inválido")
+          }
+        },
+        onError: (error: any) => {
+          const msg = error.response?.data?.erro || "Erro ao conectar ao servidor"
+          Alert.alert("Erro", msg)
+        },
+      }
+    )
   };
 
   return (
@@ -58,11 +79,18 @@ export default function Login() {
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
           placeholder="Senha"
-          secureTextEntry
+          secureTextEntry={!mostrarSenha}
           style={styles.input}
           value={senha}
           onChangeText={setSenha}
         />
+        <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
+          <Ionicons
+            name={mostrarSenha ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color="#555"
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Botão Login */}
@@ -81,7 +109,7 @@ export default function Login() {
         Não possui uma conta?{" "}
         <Text
           style={styles.link}
-          onPress={() => router.replace("/(auth)/register")}
+          onPress={() => router.navigate("/(auth)/register")}
         >
           Criar conta
         </Text>
