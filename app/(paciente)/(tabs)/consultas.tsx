@@ -162,7 +162,7 @@ export default function AgendarConsulta() {
           <ActivityIndicator size="small" color="#2b7bb9" style={{ margin: 16 }} />
         ) : (
           <View style={styles.especialidadesGrid}>
-            {especialidades.map((esp) => (
+            {especialidades.map((esp, index) => (
               <TouchableOpacity
                 key={esp}
                 style={[
@@ -185,7 +185,7 @@ export default function AgendarConsulta() {
                     especialidadeSelecionada === esp && styles.especialidadeTextAtiva,
                   ]}
                 >
-                  {esp}
+                 {esp}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -328,10 +328,10 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, color: "#666", marginHorizontal: 16, marginBottom: 12 },
   especialidadesGrid: {
     flexDirection: "row", flexWrap: "wrap",
-    justifyContent: "space-between", paddingHorizontal: 16, gap: 10,
+    justifyContent: "flex-start", paddingHorizontal: 16, gap: 10,
   },
   especialidadeCard: {
-    width: "22%", backgroundColor: "#fff", padding: 12, borderRadius: 12,
+   justifyContent: "center",  minWidth: "22%", maxWidth: '26%', backgroundColor: "#fff", padding: 12, borderRadius: 12,
     alignItems: "center", gap: 6, elevation: 2, borderWidth: 2, borderColor: "transparent",
   },
   especialidadeAtiva: { backgroundColor: "#2b7bb9", borderColor: "#2b7bb9" },

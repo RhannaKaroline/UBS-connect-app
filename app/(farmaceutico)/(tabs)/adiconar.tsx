@@ -4,13 +4,13 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { criarMedicamento, getUBS } from "@/src/lib/api-farmaceutico";
 
 export default function AdicionarMedicamento() {
@@ -82,7 +82,10 @@ export default function AdicionarMedicamento() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.subtitulo}>
           Informações do Medicamento
         </Text>
@@ -250,7 +253,7 @@ export default function AdicionarMedicamento() {
             {isPending ? "Salvando..." : "Salvar Medicamento"}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }
@@ -293,6 +296,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 15,
     elevation: 2,
+    color: "#333",
   },
   textarea: {
     backgroundColor: "#fff",
@@ -304,6 +308,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     height: 120,
     textAlignVertical: "top",
+    color: "#333",
   },
   select: {
     flexDirection: "row",

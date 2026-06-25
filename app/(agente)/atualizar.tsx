@@ -1,5 +1,6 @@
 import { Header, SearchInput } from "@/components/shared";
 import { atualizarPaciente, getPacientePorId, getPacientes } from "@/src/lib/api-agente";
+import { getUBS } from "@/src/lib/api-ubs";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -8,13 +9,13 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 
 export default function AtualizarPaciente() {
@@ -105,6 +106,10 @@ function EditarPaciente({ id }: { id: string }) {
 
 function FormularioPaciente({ paciente, id }: { paciente: any; id: string }) {
   const queryClient = useQueryClient();
+  const { data: ubsList } = useQuery({
+    queryKey: ["ubs"],
+    queryFn: () => getUBS(),
+  });
 
   const [form, setForm] = React.useState({
     telefone: paciente.telefone || "",
@@ -157,7 +162,11 @@ function FormularioPaciente({ paciente, id }: { paciente: any; id: string }) {
         onBack={() => router.back()}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <View style={styles.patientCard}>
           <View style={styles.patientAvatar}>
             <Ionicons name="person" size={30} color="#8B5CF6" />
@@ -242,26 +251,26 @@ function FormularioPaciente({ paciente, id }: { paciente: any; id: string }) {
 
         {mostrarUbs && (
           <View style={styles.selectOptions}>
-            {["UBS Central", "UBS São José", "UBS Vila Nova", "UBS Nicolau"].map(
-              (opcao) => (
+            {(ubsList ?? []).map(
+              (item) => (
                 <TouchableOpacity
-                  key={opcao}
+                  key={item.id}
                   style={[
                     styles.selectOption,
-                    form.ubs === opcao && styles.selectOptionAtivo,
+                    form.ubs === item.nome && styles.selectOptionAtivo,
                   ]}
                   onPress={() => {
-                    atualizarCampo("ubs", opcao);
+                    atualizarCampo("ubs", item.nome);
                     setMostrarUbs(false);
                   }}
                 >
                   <Text
                     style={[
                       styles.selectOptionText,
-                      form.ubs === opcao && styles.selectOptionTextAtivo,
+                      form.ubs === item.nome && styles.selectOptionTextAtivo,
                     ]}
                   >
-                    {opcao}
+                    {item.nome}
                   </Text>
                 </TouchableOpacity>
               )
@@ -297,7 +306,7 @@ function FormularioPaciente({ paciente, id }: { paciente: any; id: string }) {
             {isPending ? "Salvando..." : "Salvar Alterações"}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

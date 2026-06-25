@@ -44,21 +44,19 @@ export default function MedicoHome() {
             icon={<Ionicons name="calendar" size={24} color="#16A34A" />}
             number=""
             title="Agenda de Atendimentos"
+            onPress={() => router.push("/agenda")}
           />
           <StatCard
             icon={<Ionicons name="document-text" size={24} color="#16A34A" />}
             number=""
             title="Atualizar Prontuário"
-          />
-          <StatCard
-            icon={<Ionicons name="flask" size={24} color="#16A34A" />}
-            number=""
-            title="Solicitar Exames laboratoriais"
+            onPress={() => router.push("/agenda")}
           />
           <StatCard
             icon={<Ionicons name="folder-open" size={24} color="#16A34A" />}
             number=""
             title="Consultar Histórico de Paciente"
+            onPress={() => router.push("/historico-paciente")}
           />
         </View>
 
@@ -73,15 +71,12 @@ export default function MedicoHome() {
           <QuickAction
             icon={<Ionicons name="document-text-outline" size={20} color="#16A34A" />}
             title="Atualizar Prontuário"
-            onPress={() => router.push("/atualizar-prontuario")}
-          />
-          <QuickAction
-            icon={<Ionicons name="flask-outline" size={20} color="#16A34A" />}
-            title="Solicitar Exames Laboratoriais"
+            onPress={() => router.push("/agenda")}
           />
           <QuickAction
             icon={<Ionicons name="folder-outline" size={20} color="#16A34A" />}
             title="Consultar Histórico de Paciente"
+            onPress={() => router.push("/historico-paciente")}
           />
         </View>
 
@@ -101,7 +96,14 @@ export default function MedicoHome() {
           </View>
         ) : (
           proximas.map((consulta) => (
-            <View key={consulta.id} style={styles.atendimentoCard}>
+            <TouchableOpacity
+              key={consulta.id}
+              style={styles.atendimentoCard}
+              onPress={() => router.push({
+                pathname: "/atualizar-prontuario",
+                params: { consultaId: consulta.id },
+              })}
+            >
               <View style={styles.atendimentoLeft}>
                 <Text style={styles.atendimentoHora}>{consulta.hora}</Text>
                 <View style={styles.pacienteIcon}>
@@ -118,7 +120,7 @@ export default function MedicoHome() {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#999" />
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>

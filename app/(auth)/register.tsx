@@ -1,21 +1,19 @@
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
   Image,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useRegister } from "@/src/hooks/use-auth"
 import { getUBS, Ubs } from "@/src/lib/api-ubs"
 
@@ -45,20 +43,11 @@ export default function Register() {
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [especialidade, setEspecialidade] = useState("")
   const [ubsId, setUbsId] = useState<number | null>(null)
   const [ubsList, setUbsList] = useState<Ubs[]>([])
   const [showUbsPicker, setShowUbsPicker] = useState(false)
-
-  const scrollRef = useRef<ScrollView>(null)
-  const inputPos = useRef<Record<string, number>>({})
-
-  const handleFocus = (key: string) => {
-    const y = inputPos.current[key]
-    if (y !== undefined) {
-      scrollRef.current?.scrollTo({ y: y - 100, animated: true })
-    }
-  }
 
   const { mutate: register, isPending } = useRegister()
 
@@ -68,21 +57,106 @@ export default function Register() {
     }
   }, [tipo])
 
-  const handleRegister = () => {
-    if (!nome || !identificador || !senha) {
-      Alert.alert("Erro", "Preencha todos os campos")
-      return
+  function validarCPF(cpf: string): boolean {
+    const digits = cpf.replace(/\D/g, "")
+    if (digits.length !== 11) return false
+    if (/^(\d)\1{10}$/.test(digits)) return false
+    let soma = 0
+    for (let i = 0; i < 9; i++) soma += parseInt(digits[i]) * (10 - i)
+    let resto = (soma * 10) % 11
+    if (resto === 10) resto = 0
+    if (resto !== parseInt(digits[9])) return false
+    soma = 0
+    for (let i = 0; i < 10; i++) soma += parseInt(digits[i]) * (11 - i)
+    resto = (soma * 10) % 11
+    if (resto === 10) resto = 0
+    return resto === parseInt(digits[10])
+  }
+
+  function formatarCPF(valor: string) {
+    const digits = valor.replace(/\D/g, "").slice(0, 11)
+    return digits
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2")
+  }
+
+  function formatarCRM(valor: string) {
+    const digits = valor.replace(/[^0-9a-zA-Z\-]/g, "").toUpperCase()
+    const parte = digits.replace(/-.*$/, "")
+    const digitos = parte.replace(/\D/g, "").slice(0, 6)
+    if (digits.includes("-")) {
+      const uf = digits.replace(/^[^-]*-/, "").replace(/[^A-Z]/g, "").slice(0, 2)
+      return `${digitos}-${uf}`
     }
-    if (senha !== confirmarSenha) {
-      Alert.alert("Erro", "As senhas não conferem")
-      return
+    return digitos
+  }
+
+  function formatarPrefixo(valor: string, prefixo: string) {
+    const limpo = valor.replace(/[^0-9a-zA-Z\-]/g, "").toUpperCase()
+    if (!limpo.startsWith(prefixo)) {
+      const digitos = limpo.replace(/\D/g, "").slice(0, 8)
+      return digitos ? `${prefixo}${digitos}` : prefixo
+    }
+    const digitos = limpo.replace(prefixo, "").replace(/\D/g, "").slice(0, 8)
+    return digitos ? `${prefixo}${digitos}` : prefixo
+  }
+
+  const handleRegister = () => {
+    const novosErros: Record<string, string> = {}
+
+    if (!nome?.trim()) {
+      novosErros.nome = "O nome é obrigatório."
+    } else if (nome.trim().length < 3) {
+      novosErros.nome = "O nome deve ter pelo menos 3 caracteres."
     }
 
-    const body: any = { nome, senha, tipo_usuario: tipo }
+    if (!senha) {
+      novosErros.senha = "A senha é obrigatória."
+    } else if (senha.length < 6) {
+      novosErros.senha = "A senha deve ter no mínimo 6 caracteres."
+    }
+
+    if (!confirmarSenha) {
+      novosErros.confirmarSenha = "Confirme a senha."
+    } else if (senha !== confirmarSenha) {
+      novosErros.confirmarSenha = "As senhas não conferem."
+    }
+
+    if (!identificador?.trim()) {
+      novosErros.identificador = "Este campo é obrigatório."
+    } else if (tipo === "paciente") {
+      const cpfDigits = identificador.replace(/\D/g, "")
+      if (cpfDigits.length !== 11) {
+        novosErros.identificador = "O CPF deve ter 11 dígitos."
+      } else if (!validarCPF(identificador)) {
+        novosErros.identificador = "CPF inválido. Verifique os dígitos."
+      }
+    } else if (tipo === "medico") {
+      const regexCRM = /^\d{4,6}-[A-Z]{2}$/
+      if (!regexCRM.test(identificador.trim())) {
+        novosErros.identificador = "CRM inválido. Use o formato: 123456-UF (ex: 123456-SP)"
+      }
+    } else if (tipo === "agente_saude") {
+      const regexACS = /^ACS-\d{4,8}$/
+      if (!regexACS.test(identificador.trim())) {
+        novosErros.identificador = "ACS inválido. Use o formato: ACS-XXXXX (ex: ACS-98765)"
+      }
+    } else if (tipo === "farmaceutico") {
+      const regexCRF = /^CRF-\d{4,8}$/
+      if (!regexCRF.test(identificador.trim())) {
+        novosErros.identificador = "CRF inválido. Use o formato: CRF-XXXXX (ex: CRF-54321)"
+      }
+    }
+
+    setErrors(novosErros)
+    if (Object.keys(novosErros).length > 0) return
+
+    const body: any = { nome: nome.trim(), senha, tipo_usuario: tipo }
     if (tipo === "paciente") {
-      body.cpf = identificador
+      body.cpf = identificador.replace(/\D/g, "")
     } else {
-      body.registro_profissional = identificador
+      body.registro_profissional = identificador.trim()
     }
     if (tipo === "medico") {
       if (especialidade) body.especialidade = especialidade
@@ -116,12 +190,7 @@ export default function Register() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior="padding"
-    >
-    <ScrollView
-      ref={scrollRef}
+    <KeyboardAwareScrollView
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
@@ -146,37 +215,52 @@ export default function Register() {
         <Ionicons name="chevron-down-outline" size={18} color="#555" />
       </TouchableOpacity>
 
-      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["nome"] = e.nativeEvent.layout.y }}>
+      <View style={styles.inputContainer}>
         <Ionicons name="person-outline" size={20} color="#555" />
         <TextInput
           placeholder="Nome completo"
+          placeholderTextColor="#B0B0B0"
           style={styles.input}
           value={nome}
-          onChangeText={setNome}
-          onFocus={() => handleFocus("nome")}
+          onChangeText={(v) => { setNome(v); setErrors((e) => ({ ...e, nome: "" })) }}
         />
       </View>
+      {!!errors.nome && <Text style={styles.errorText}>{errors.nome}</Text>}
 
-      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["identificador"] = e.nativeEvent.layout.y }}>
+      <View style={styles.inputContainer}>
         <Ionicons name="card-outline" size={20} color="#555" />
         <TextInput
           placeholder={CAMPOS_TIPO[tipo].placeholder}
           style={styles.input}
           value={identificador}
-          onChangeText={setIdentificador}
-          onFocus={() => handleFocus("identificador")}
+          onChangeText={(v) => {
+            setErrors((e) => ({ ...e, identificador: "" }))
+            if (tipo === "paciente") setIdentificador(formatarCPF(v))
+            else if (tipo === "medico") setIdentificador(formatarCRM(v))
+            else if (tipo === "agente_saude") setIdentificador(formatarPrefixo(v, "ACS-"))
+            else if (tipo === "farmaceutico") setIdentificador(formatarPrefixo(v, "CRF-"))
+            else setIdentificador(v)
+          }}
+          keyboardType={tipo === "paciente" ? "numeric" : "default"}
+          maxLength={
+            tipo === "paciente" ? 14 :
+            tipo === "medico" ? 9 :
+            tipo === "agente_saude" ? 13 :
+            tipo === "farmaceutico" ? 13 :
+            undefined
+          }
         />
       </View>
+      {!!errors.identificador && <Text style={styles.errorText}>{errors.identificador}</Text>}
 
-      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["senha"] = e.nativeEvent.layout.y }}>
+      <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
           placeholder="Senha"
           secureTextEntry={!mostrarSenha}
           style={styles.input}
           value={senha}
-          onChangeText={setSenha}
-          onFocus={() => handleFocus("senha")}
+          onChangeText={(v) => { setSenha(v); setErrors((e) => ({ ...e, senha: "" })) }}
         />
         <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
           <Ionicons
@@ -186,29 +270,29 @@ export default function Register() {
           />
         </TouchableOpacity>
       </View>
+      {!!errors.senha && <Text style={styles.errorText}>{errors.senha}</Text>}
 
-      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["confirmarSenha"] = e.nativeEvent.layout.y }}>
+      <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
           placeholder="Confirmar senha"
           secureTextEntry={!mostrarSenha}
           style={styles.input}
           value={confirmarSenha}
-          onChangeText={setConfirmarSenha}
-          onFocus={() => handleFocus("confirmarSenha")}
+          onChangeText={(v) => { setConfirmarSenha(v); setErrors((e) => ({ ...e, confirmarSenha: "" })) }}
         />
       </View>
+      {!!errors.confirmarSenha && <Text style={styles.errorText}>{errors.confirmarSenha}</Text>}
 
       {tipo === "medico" && (
         <>
-          <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["especialidade"] = e.nativeEvent.layout.y }}>
+          <View style={styles.inputContainer}>
             <Ionicons name="medical-outline" size={20} color="#555" />
             <TextInput
               placeholder="Especialidade (ex: Pediatria)"
               style={styles.input}
               value={especialidade}
               onChangeText={setEspecialidade}
-              onFocus={() => handleFocus("especialidade")}
             />
           </View>
 
@@ -303,6 +387,13 @@ export default function Register() {
                 ]}
                 onPress={() => {
                   setTipo(t.key)
+                  setNome("")
+                  setIdentificador("")
+                  setSenha("")
+                  setConfirmarSenha("")
+                  setEspecialidade("")
+                  setUbsId(null)
+                  setErrors({})
                   setShowDropdown(false)
                 }}
               >
@@ -327,8 +418,7 @@ export default function Register() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -445,6 +535,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 10,
+    color: "#333",
   },
 
   dismissButton: {
@@ -486,5 +577,13 @@ const styles = StyleSheet.create({
   link: {
     color: "#2e6eb5",
     fontWeight: "bold",
+  },
+
+  errorText: {
+    color: "#DC2626",
+    fontSize: 12,
+    alignSelf: "flex-start",
+    marginBottom: 6,
+    marginLeft: 4,
   },
 });

@@ -98,7 +98,13 @@ export default function AgendaAtendimentos() {
           renderItem={({ item }) => {
             const statusStyle = getStatusStyle(item.status);
             return (
-              <TouchableOpacity style={styles.card}>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => router.push({
+                  pathname: "/atualizar-prontuario",
+                  params: { consultaId: item.id },
+                })}
+              >
                 <View style={styles.cardLeft}>
                   <Text style={styles.horario}>{item.hora}</Text>
                   <View style={styles.pacienteIcon}>

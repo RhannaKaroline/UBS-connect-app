@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller"
 import { useLogin } from "@/src/hooks/use-auth"
 import { useAuthStore } from "@/src/stores/auth-store"
 import api from "@/src/lib/api"
@@ -103,7 +104,10 @@ export default function Login() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.logoContainer}>
         <Image
           source={require("@/assets/images/logo-ubs.png")}
@@ -154,11 +158,6 @@ export default function Login() {
         )}
       </TouchableOpacity>
 
-      <Text style={styles.helpText}>
-        Esqueceu seus dados de login?{" "}
-        <Text style={styles.link}>Obtenha ajuda para entrar</Text>
-      </Text>
-
       <TouchableOpacity
         onPress={() => router.navigate("/(auth)/register")}
         testID="Criar conta"
@@ -168,7 +167,7 @@ export default function Login() {
           <Text style={styles.link}>Criar conta</Text>
         </Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -213,6 +212,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginLeft: 10,
+    color: "#333",
   },
 
   button: {

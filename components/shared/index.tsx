@@ -39,16 +39,27 @@ interface StatCardProps {
   icon: React.ReactNode;
   number: string;
   title: string;
+  onPress?: () => void;
 }
 
-export function StatCard({ icon, number, title }: StatCardProps) {
-  return (
-    <View style={statCardStyles.card}>
+export function StatCard({ icon, number, title, onPress }: StatCardProps) {
+  const content = (
+    <>
       {icon}
       <Text style={statCardStyles.number}>{number}</Text>
       <Text style={statCardStyles.title}>{title}</Text>
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity style={statCardStyles.card} onPress={onPress} activeOpacity={0.7}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={statCardStyles.card}>{content}</View>;
 }
 
 const statCardStyles = StyleSheet.create({
@@ -162,6 +173,7 @@ const searchStyles = StyleSheet.create({
     padding: 12,
     marginLeft: 8,
     fontSize: 15,
+    color: "#333",
   },
 });
 

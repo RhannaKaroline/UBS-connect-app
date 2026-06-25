@@ -1,48 +1,58 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Header } from "../../../components/shared";
-
-const ubsDetalhes: Record<number, any> = {
-  1: {
-    id: 1,
-    nome: "UBS Manoel Mendes da Silva",
-    endereco: "Rua Afonço Carvalho",
-    bairro: "Colônia, Itacoatiara - AM",
-    telefone: "(92) 9999-9999",
-    email: "ubs.manoelmendes@saude.am.gov.br",
-    horarioFuncionamento: "Seg - Sex: 07h às 17h",
-    servicos: ["Clínica Geral", "Enfermagem", "Pediatria", "Vacinação", "Odontologia", "Exames Básicos"],
-    imagemUrl: null,
-  },
-  2: {
-    id: 2,
-    nome: "UBS Paulo Gomes da Silva",
-    endereco: "Rua Professora Terezinha Peixoto",
-    bairro: "Colônia, Itacoatiara - AM",
-    telefone: "(92) 8888-8888",
-    email: "ubs.paulogomes@saude.am.gov.br",
-    horarioFuncionamento: "Seg - Sex: 07h às 17h",
-    servicos: ["Clínica Geral", "Enfermagem", "Pediatria", "Vacinação"],
-    imagemUrl: null,
-  },
-  3: {
-    id: 3,
-    nome: "UBS Central",
-    endereco: "Av. Brasil, 500",
-    bairro: "Centro, Itacoatiara - AM",
-    telefone: "(92) 7777-7777",
-    email: "ubs.central@saude.am.gov.br",
-    horarioFuncionamento: "Seg - Sex: 07h às 17h",
-    servicos: ["Clínica Geral", "Enfermagem", "Pediatria", "Vacinação", "Odontologia", "Exames Básicos", "Urgência"],
-    imagemUrl: null,
-  },
-};
+import { getUBSPorId } from "../../../src/lib/api-ubs";
 
 export default function DetalhesUBS() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const ubs = ubsDetalhes[Number(id)] || ubsDetalhes[1];
+
+  const { data: ubs, isLoading } = useQuery({
+    queryKey: ["ubs", Number(id)],
+    queryFn: () => getUBSPorId(Number(id)),
+    enabled: !!id,
+  });
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Header
+          title="Detalhes da UBS"
+          titleColor="#2b7bb9"
+          onBack={() => router.back()}
+        />
+        <ActivityIndicator size="large" color="#2b7bb9" style={{ marginTop: 40 }} />
+      </View>
+    );
+  }
+
+  if (!ubs) {
+    return (
+      <View style={styles.container}>
+        <Header
+          title="Detalhes da UBS"
+          titleColor="#2b7bb9"
+          onBack={() => router.back()}
+        />
+        <Text style={{ textAlign: "center", marginTop: 40, color: "#666" }}>
+          UBS não encontrada.
+        </Text>
+      </View>
+    );
+  }
+
+  const servicosList: string[] = typeof ubs.servicos === "string"
+    ? (() => {
+        try {
+          const parsed = JSON.parse(ubs.servicos);
+          return Array.isArray(parsed) ? parsed : ubs.servicos.split(",").map((s) => s.trim());
+        } catch {
+          return ubs.servicos.split(",").map((s) => s.trim());
+        }
+      })()
+    : ubs.servicos;
 
   return (
     <View style={styles.container}>
@@ -107,7 +117,7 @@ export default function DetalhesUBS() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Serviços oferecidos</Text>
           <View style={styles.servicosGrid}>
-            {ubs.servicos.map((servico: string, index: number) => (
+            {servicosList.map((servico: string, index: number) => (
               <View key={index} style={styles.servicoItem}>
                 <Ionicons name="checkmark-circle" size={18} color="#2b7bb9" />
                 <Text style={styles.servicoText}>{servico}</Text>

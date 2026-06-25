@@ -6,6 +6,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native
 import { Stack } from "expo-router"
 import { StatusBar } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { KeyboardProvider } from "react-native-keyboard-controller"
 import "react-native-reanimated"
 
 import { AppProvider } from "../context/app-context"
@@ -21,6 +22,7 @@ export default function Layout() {
       <AppProvider>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
+            <KeyboardProvider>
             <Stack>
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(paciente)" options={{ headerShown: false }} />
@@ -29,6 +31,7 @@ export default function Layout() {
               <Stack.Screen name="(farmaceutico)" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
             </Stack>
+            </KeyboardProvider>
           </SafeAreaView>
           <StatusBar barStyle="light-content"/>
         </ThemeProvider>

@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
     marginLeft: 8,
+    color: "#333",
   },
   filtro: {
     flexDirection: "row",

@@ -1,18 +1,19 @@
 import { Header } from "@/components/shared";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { criarPaciente } from "../../src/lib/api-agente";
+import { getUBS } from "../../src/lib/api-ubs";
 
 function formatarCPF(valor: string) {
   const digits = valor.replace(/\D/g, "").slice(0, 11);
@@ -71,6 +72,10 @@ function validarData(valor: string): boolean {
 
 export default function CadastrarPaciente() {
   const queryClient = useQueryClient();
+  const { data: ubsList } = useQuery({
+    queryKey: ["ubs"],
+    queryFn: () => getUBS(),
+  });
   const [nome, setNome] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
   const [cpf, setCpf] = useState("");
@@ -150,7 +155,11 @@ export default function CadastrarPaciente() {
         onBack={() => router.back()}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <Text style={styles.sectionTitle}>Informações Pessoais</Text>
 
         <Text style={styles.label}>Nome Completo</Text>
@@ -271,26 +280,26 @@ export default function CadastrarPaciente() {
 
         {mostrarUbs && (
           <View style={styles.selectOptions}>
-            {["UBS Central", "UBS São José", "UBS Vila Nova", "UBS Nicolau"].map(
-              (opcao) => (
+            {(ubsList ?? []).map(
+              (item) => (
                 <TouchableOpacity
-                  key={opcao}
+                  key={item.id}
                   style={[
                     styles.selectOption,
-                    ubs === opcao && styles.selectOptionAtivo,
+                    ubs === item.nome && styles.selectOptionAtivo,
                   ]}
                   onPress={() => {
-                    setUbs(opcao);
+                    setUbs(item.nome);
                     setMostrarUbs(false);
                   }}
                 >
                   <Text
                     style={[
                       styles.selectOptionText,
-                      ubs === opcao && styles.selectOptionTextAtivo,
+                      ubs === item.nome && styles.selectOptionTextAtivo,
                     ]}
                   >
-                    {opcao}
+                    {item.nome}
                   </Text>
                 </TouchableOpacity>
               )
@@ -318,7 +327,7 @@ export default function CadastrarPaciente() {
             {isPending ? "Salvando..." : "Salvar Paciente"}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

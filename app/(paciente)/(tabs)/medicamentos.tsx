@@ -4,13 +4,13 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import api from "../../../src/lib/api";
 
 interface MedicamentoUBS {
@@ -84,8 +84,9 @@ export default function Medicamentos() {
       {isLoading ? (
         <ActivityIndicator size="large" color="#4a90c2" style={{ marginTop: 40 }} />
       ) : (
-        <ScrollView
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
@@ -135,7 +136,7 @@ export default function Medicamentos() {
               </View>
             ))
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       )}
     </View>
   );
