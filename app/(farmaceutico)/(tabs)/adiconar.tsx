@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { criarMedicamento } from "@/src/lib/api-farmaceutico";
+import { criarMedicamento, getUBS } from "@/src/lib/api-farmaceutico";
 
 export default function AdicionarMedicamento() {
   const queryClient = useQueryClient();
@@ -24,6 +24,19 @@ export default function AdicionarMedicamento() {
   const [estoqueInicial, setEstoqueInicial] = useState("");
   const [status, setStatus] = useState("");
   const [mostrarStatus, setMostrarStatus] = useState(false);
+  const [ubsSelecionadas, setUbsSelecionadas] = useState<number[]>([]);
+  const [mostrarUbs, setMostrarUbs] = useState(false);
+
+  const { data: ubsList } = useQuery({
+    queryKey: ["ubs"],
+    queryFn: getUBS,
+  });
+
+  const toggleUbs = (id: number) => {
+    setUbsSelecionadas((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+    );
+  };
 
   const { mutate: salvar, isPending } = useMutation({
     mutationFn: () =>
@@ -36,6 +49,7 @@ export default function AdicionarMedicamento() {
         registroAnvisa,
         estoqueInicial: Number(estoqueInicial) || 0,
         status,
+        ubsIds: ubsSelecionadas,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["medicamentos"] });
@@ -60,7 +74,6 @@ export default function AdicionarMedicamento() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#333" />
@@ -74,7 +87,6 @@ export default function AdicionarMedicamento() {
           Informações do Medicamento
         </Text>
 
-        {/* Nome */}
         <Text style={styles.label}>Nome do Medicamento</Text>
         <TextInput
           placeholder="Digite o nome do medicamento"
@@ -84,7 +96,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setNome}
         />
 
-        {/* Descrição */}
         <Text style={styles.label}>Descrição</Text>
         <TextInput
           placeholder="Digite uma descrição"
@@ -95,7 +106,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setDescricao}
         />
 
-        {/* Categoria */}
         <Text style={styles.label}>Categoria</Text>
         <TextInput
           placeholder="Ex: Analgésico, Antibiótico"
@@ -105,7 +115,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setCategoria}
         />
 
-        {/* Apresentação */}
         <Text style={styles.label}>Apresentação</Text>
         <TextInput
           placeholder="Ex: Comprimido, Cápsula, Gotas"
@@ -115,7 +124,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setApresentacao}
         />
 
-        {/* Validade Média */}
         <Text style={styles.label}>Validade Média</Text>
         <TextInput
           placeholder="Ex: 24 meses"
@@ -125,7 +133,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setValidadeMedia}
         />
 
-        {/* Registro ANVISA */}
         <Text style={styles.label}>Registro ANVISA</Text>
         <TextInput
           placeholder="Número do registro na ANVISA"
@@ -135,7 +142,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setRegistroAnvisa}
         />
 
-        {/* Estoque Inicial */}
         <Text style={styles.label}>Estoque Inicial</Text>
         <TextInput
           placeholder="Digite a quantidade inicial"
@@ -146,7 +152,6 @@ export default function AdicionarMedicamento() {
           onChangeText={setEstoqueInicial}
         />
 
-        {/* Status */}
         <Text style={styles.label}>Status</Text>
         <TouchableOpacity
           style={styles.select}
@@ -189,7 +194,53 @@ export default function AdicionarMedicamento() {
           </View>
         )}
 
-        {/* Botão Salvar */}
+        <Text style={styles.label}>UBS de Destino</Text>
+        <TouchableOpacity
+          style={styles.select}
+          onPress={() => setMostrarUbs(!mostrarUbs)}
+        >
+          <Text style={[styles.selectText, ubsSelecionadas.length === 0 && styles.placeholder]}>
+            {ubsSelecionadas.length > 0
+              ? `${ubsSelecionadas.length} UBS selecionada(s)`
+              : "Selecione as UBS"}
+          </Text>
+          <Ionicons
+            name={mostrarUbs ? "chevron-up" : "chevron-down"}
+            size={20}
+            color="#999"
+          />
+        </TouchableOpacity>
+
+        {mostrarUbs && (
+          <View style={styles.selectOptions}>
+            {ubsList?.map((ubs) => (
+              <TouchableOpacity
+                key={ubs.id}
+                style={[
+                  styles.selectOption,
+                  ubsSelecionadas.includes(ubs.id) && styles.selectOptionAtivo,
+                ]}
+                onPress={() => toggleUbs(ubs.id)}
+              >
+                <Ionicons
+                  name={ubsSelecionadas.includes(ubs.id) ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={ubsSelecionadas.includes(ubs.id) ? "#F59E0B" : "#999"}
+                />
+                <Text
+                  style={[
+                    styles.selectOptionText,
+                    ubsSelecionadas.includes(ubs.id) && styles.selectOptionTextAtivo,
+                    { marginLeft: 8 },
+                  ]}
+                >
+                  {ubs.nome}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         <TouchableOpacity
           style={[styles.botao, isPending && styles.botaoDisabled]}
           onPress={handleSalvar}

@@ -1,356 +1,189 @@
-import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
 import React from "react";
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { StatCard, QuickAction, SectionTitle } from "../../../components/shared";
+import { getEstatisticas, getProximasVisitas } from "../../../src/lib/api-agente";
 
-export default function HomeScreen() {
+export default function HomeAgente() {
+  const { data: stats, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ["estatisticas-agente"],
+    queryFn: getEstatisticas,
+  });
+
+  const { data: visitas } = useQuery({
+    queryKey: ["visitas-agente"],
+    queryFn: getProximasVisitas,
+  });
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* HEADER */}
+    <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        }
+      >
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={24} color="#fff" />
-            </View>
-
+          <View style={styles.userInfo}>
+            <Ionicons name="person-circle-outline" size={50} color="#9db4c0" />
             <View>
-              <Text style={styles.greeting}>Olá, Agente!</Text>
-              <Text style={styles.role}>Agente de Saúde</Text>
+              <Text style={styles.hello}>Olá, Agente!</Text>
+              <Text style={styles.role}>Agente Comunitário de Saúde</Text>
             </View>
           </View>
-
-          <TouchableOpacity style={styles.notification}>
-            <Ionicons name="notifications-outline" size={24} color="#444" />
-
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>1</Text>
-            </View>
+          <TouchableOpacity onPress={() => router.push("/configuracoes")}>
+            <Ionicons name="settings-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
 
-        {/* VISÃO GERAL */}
-        <Text style={styles.sectionTitle}>Visão Geral</Text>
+        <SectionTitle title="Visão Geral" />
 
-        <View style={styles.cardsContainer}>
-          <View style={styles.card}>
-            <Ionicons name="people-outline" size={28} color="#8B5CF6" />
-            <Text style={styles.cardNumber}>152</Text>
-            <Text style={styles.cardLabel}>Pacientes{"\n"}Cadastrados</Text>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#8B5CF6" style={{ margin: 32 }} />
+        ) : (
+          <View style={styles.grid}>
+            <StatCard
+              icon={<Ionicons name="people-outline" size={24} color="#8B5CF6" />}
+              number={String(stats?.totalPacientes ?? 0)}
+              title="Pacientes Cadastrados"
+            />
+            <StatCard
+              icon={<Feather name="clipboard" size={22} color="#22C55E" />}
+              number={String(stats?.visitasHoje ?? 0)}
+              title="Visitas hoje"
+            />
+            <StatCard
+              icon={<MaterialIcons name="calendar-month" size={24} color="#F59E0B" />}
+              number={String(stats?.acompanhamentos ?? 0)}
+              title="Acompanhamento"
+            />
+            <StatCard
+              icon={<Ionicons name="megaphone-outline" size={22} color="#3B82F6" />}
+              number={String(stats?.campanhasAtivas ?? 0)}
+              title="Campanhas ativas"
+            />
           </View>
+        )}
 
-          <View style={styles.card}>
-            <Feather name="clipboard" size={26} color="#22C55E" />
-            <Text style={styles.cardNumber}>28</Text>
-            <Text style={styles.cardLabel}>Visitas Hoje</Text>
-          </View>
+        <SectionTitle title="Ações Rápidas" />
 
-          <View style={styles.card}>
-            <MaterialIcons name="calendar-month" size={28} color="#F59E0B" />
-            <Text style={styles.cardNumber}>12</Text>
-            <Text style={styles.cardLabel}>Acompanhamentos</Text>
-          </View>
-
-          <View style={styles.card}>
-            <Ionicons name="megaphone-outline" size={26} color="#3B82F6" />
-            <Text style={styles.cardNumber}>3</Text>
-            <Text style={styles.cardLabel}>Campanhas Ativas</Text>
-          </View>
-        </View>
-
-        {/* AÇÕES RÁPIDAS */}
-        <Text style={styles.sectionTitle}>Ações Rápidas</Text>
-
-        <View style={styles.actionsContainer}>
-          <ActionItem
-            icon={
-              <Ionicons
-                name="person-add-outline"
-                size={20}
-                color="#8B5CF6"
-              />
-            }
+        <View style={styles.quickActions}>
+          <QuickAction
+            icon={<Ionicons name="person-add-outline" size={20} color="#8B5CF6" />}
             title="Cadastrar Paciente"
+            onPress={() => router.push("/cadastrar")}
           />
-
-          <ActionItem
+          <QuickAction
             icon={<Feather name="edit-2" size={18} color="#22C55E" />}
             title="Atualizar Cadastro"
+            onPress={() => router.push("/atualizar")}
           />
-
-          <ActionItem
+          <QuickAction
             icon={<Ionicons name="people-outline" size={20} color="#3B82F6" />}
-            title="Minha Equipe ACS"
+            title="Minha equipe ACS"
+            onPress={() => router.push("/minha-equipe")}
           />
-
-          <ActionItem
-            icon={
-              <Ionicons
-                name="megaphone-outline"
-                size={20}
-                color="#F97316"
-              />
-            }
+          <QuickAction
+            icon={<Ionicons name="megaphone-outline" size={20} color="#F97316" />}
             title="Campanhas de Saúde"
+            onPress={() => router.push("/campanhas")}
           />
         </View>
 
-        {/* PRÓXIMAS VISITAS */}
-        <Text style={styles.sectionTitle}>Próximas Visitas</Text>
+        <SectionTitle title="Próximas Visitas" />
 
-        <View style={styles.visitCard}>
-          <View>
-            <Text style={styles.visitName}>Maria Silva</Text>
-
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={14} color="#999" />
-              <Text style={styles.locationText}>Rua das Flores, 123</Text>
+        {visitas?.map((visita) => (
+          <View key={visita.id} style={styles.visitCard}>
+            <View>
+              <Text style={styles.visitName}>{visita.pacienteNome}</Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={14} color="#999" />
+                <Text style={styles.locationText}>{visita.endereco}</Text>
+              </View>
+            </View>
+            <View style={styles.timeBox}>
+              <Text style={styles.time}>
+                {visita.dataHora?.split(" ")[1]?.slice(0, 5) || "9:00"}
+              </Text>
             </View>
           </View>
-
-          <View style={styles.timeBox}>
-            <Text style={styles.time}>09:00</Text>
-            <Text style={styles.today}>Hoje</Text>
-          </View>
-        </View>
+        ))}
       </ScrollView>
-
-      {/* BOTTOM TAB */}
-      <View style={styles.bottomTab}>
-        <TabItem icon="home" label="Início" active />
-
-        <TabItem icon="people-outline" label="Pacientes" />
-
-        <TabItem icon="people-circle-outline" label="Equipe" />
-
-        <TabItem icon="megaphone-outline" label="Campanhas" />
-
-        <TabItem icon="person-outline" label="Perfil" />
-      </View>
-    </SafeAreaView>
-  );
-}
-
-/* COMPONENTE DAS AÇÕES */
-function ActionItem({
-  icon,
-  title,
-}: {
-  icon: React.ReactNode;
-  title: string;
-}) {
-  return (
-    <TouchableOpacity style={styles.actionItem}>
-      <View style={styles.actionLeft}>
-        {icon}
-        <Text style={styles.actionText}>{title}</Text>
-      </View>
-
-      <Ionicons name="chevron-forward" size={18} color="#999" />
-    </TouchableOpacity>
-  );
-}
-
-/* COMPONENTE DAS TABS */
-function TabItem({
-  icon,
-  label,
-  active = false,
-}: {
-  icon: any;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <TouchableOpacity style={styles.tabItem}>
-      <Ionicons
-        name={icon}
-        size={22}
-        color={active ? "#8B5CF6" : "#999"}
-      />
-
-      <Text
-        style={[
-          styles.tabLabel,
-          active && {
-            color: "#8B5CF6",
-            fontWeight: "600",
-          },
-        ]}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 18,
-    paddingTop: 12,
+    backgroundColor: "#f2f4f7",
   },
-
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    padding: 16,
     alignItems: "center",
-    marginBottom: 25,
   },
-
-  headerLeft: {
+  userInfo: {
     flexDirection: "row",
+    gap: 10,
     alignItems: "center",
   },
-
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#C4B5FD",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
+  hello: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
   },
-
-  greeting: {
-    fontSize: 16,
-    color: "#444",
-  },
-
   role: {
     fontSize: 14,
     color: "#8B5CF6",
-    fontWeight: "600",
-    marginTop: 2,
+    fontWeight: "500",
   },
-
-  notification: {
-    position: "relative",
-  },
-
-  badge: {
-    position: "absolute",
-    top: -2,
-    right: -4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#EF4444",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "700",
-  },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#222",
-    marginBottom: 14,
-    marginTop: 8,
-  },
-
-  cardsContainer: {
+  grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
   },
-
-  card: {
-    width: "48%",
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#EAEAEA",
-    padding: 16,
-    marginBottom: 14,
+  quickActions: {
+    marginHorizontal: 16,
   },
-
-  cardNumber: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#222",
-    marginTop: 10,
-  },
-
-  cardLabel: {
-    fontSize: 13,
-    color: "#777",
-    marginTop: 4,
-    lineHeight: 18,
-  },
-
-  actionsContainer: {
-    marginBottom: 10,
-  },
-
-  actionItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#EAEAEA",
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-  },
-
-  actionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  actionText: {
-    marginLeft: 12,
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500",
-  },
-
   visitCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#EAEAEA",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 100,
+    elevation: 2,
   },
-
   visitName: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#222",
-    marginBottom: 6,
+    fontWeight: "bold",
+    color: "#333",
   },
-
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4,
   },
-
   locationText: {
     fontSize: 13,
-    color: "#999",
+    color: "#666",
     marginLeft: 4,
   },
-
   timeBox: {
     backgroundColor: "#F3E8FF",
     borderRadius: 10,
@@ -358,40 +191,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     alignItems: "center",
   },
-
   time: {
     color: "#8B5CF6",
     fontWeight: "700",
     fontSize: 15,
-  },
-
-  today: {
-    color: "#666",
-    fontSize: 12,
-    marginTop: 2,
-  },
-
-  bottomTab: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#EAEAEA",
-    paddingVertical: 10,
-    paddingBottom: 20,
-  },
-
-  tabItem: {
-    alignItems: "center",
-  },
-
-  tabLabel: {
-    fontSize: 11,
-    color: "#999",
-    marginTop: 4,
   },
 });

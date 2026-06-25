@@ -13,6 +13,8 @@ interface RegisterData {
   tipo_usuario: string
   cpf?: string
   registro_profissional?: string
+  especialidade?: string
+  ubs_id?: number
 }
 
 export function useLogin() {
@@ -24,7 +26,9 @@ export function useLogin() {
       return response.data
     },
     onSuccess: (data) => {
-      storeLogin(data.usuario)
+      if (data.token && data.usuario) {
+        storeLogin(data.usuario, data.token)
+      }
     },
   })
 }

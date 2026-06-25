@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
   Image,
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +17,7 @@ import {
   View,
 } from "react-native"
 import { useRegister } from "@/src/hooks/use-auth"
+import { getUBS, Ubs } from "@/src/lib/api-ubs"
 
 type TipoUsuario = "paciente" | "medico" | "agente_saude" | "farmaceutico"
 
@@ -42,8 +45,28 @@ export default function Register() {
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [especialidade, setEspecialidade] = useState("")
+  const [ubsId, setUbsId] = useState<number | null>(null)
+  const [ubsList, setUbsList] = useState<Ubs[]>([])
+  const [showUbsPicker, setShowUbsPicker] = useState(false)
+
+  const scrollRef = useRef<ScrollView>(null)
+  const inputPos = useRef<Record<string, number>>({})
+
+  const handleFocus = (key: string) => {
+    const y = inputPos.current[key]
+    if (y !== undefined) {
+      scrollRef.current?.scrollTo({ y: y - 100, animated: true })
+    }
+  }
 
   const { mutate: register, isPending } = useRegister()
+
+  useEffect(() => {
+    if (tipo === "medico") {
+      getUBS().then(setUbsList).catch(() => setUbsList([]))
+    }
+  }, [tipo])
 
   const handleRegister = () => {
     if (!nome || !identificador || !senha) {
@@ -60,6 +83,10 @@ export default function Register() {
       body.cpf = identificador
     } else {
       body.registro_profissional = identificador
+    }
+    if (tipo === "medico") {
+      if (especialidade) body.especialidade = especialidade
+      if (ubsId) body.ubs_id = ubsId
     }
 
     register(body, {
@@ -89,8 +116,15 @@ export default function Register() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Logo */}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior="padding"
+    >
+    <ScrollView
+      ref={scrollRef}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.logoContainer}>
         <Image
           source={require("@/assets/images/logo-ubs.png")}
@@ -99,10 +133,8 @@ export default function Register() {
         />
       </View>
 
-      {/* Título */}
       <Text style={styles.title}>Criar Conta</Text>
 
-      {/* Seletor de tipo */}
       <Text style={styles.label}>Tipo de usuário</Text>
       <TouchableOpacity style={styles.dropdown} onPress={() => setShowDropdown(true)}>
         <Ionicons
@@ -114,30 +146,29 @@ export default function Register() {
         <Ionicons name="chevron-down-outline" size={18} color="#555" />
       </TouchableOpacity>
 
-      {/* Nome */}
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["nome"] = e.nativeEvent.layout.y }}>
         <Ionicons name="person-outline" size={20} color="#555" />
         <TextInput
           placeholder="Nome completo"
           style={styles.input}
           value={nome}
           onChangeText={setNome}
+          onFocus={() => handleFocus("nome")}
         />
       </View>
 
-      {/* Identificador (CPF / CRM / ACS / CRF) */}
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["identificador"] = e.nativeEvent.layout.y }}>
         <Ionicons name="card-outline" size={20} color="#555" />
         <TextInput
           placeholder={CAMPOS_TIPO[tipo].placeholder}
           style={styles.input}
           value={identificador}
           onChangeText={setIdentificador}
+          onFocus={() => handleFocus("identificador")}
         />
       </View>
 
-      {/* Senha */}
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["senha"] = e.nativeEvent.layout.y }}>
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
           placeholder="Senha"
@@ -145,6 +176,7 @@ export default function Register() {
           style={styles.input}
           value={senha}
           onChangeText={setSenha}
+          onFocus={() => handleFocus("senha")}
         />
         <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
           <Ionicons
@@ -155,8 +187,7 @@ export default function Register() {
         </TouchableOpacity>
       </View>
 
-      {/* Confirmar senha */}
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["confirmarSenha"] = e.nativeEvent.layout.y }}>
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
           placeholder="Confirmar senha"
@@ -164,10 +195,33 @@ export default function Register() {
           style={styles.input}
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}
+          onFocus={() => handleFocus("confirmarSenha")}
         />
       </View>
 
-      {/* Botão */}
+      {tipo === "medico" && (
+        <>
+          <View style={styles.inputContainer} onLayout={(e) => { inputPos.current["especialidade"] = e.nativeEvent.layout.y }}>
+            <Ionicons name="medical-outline" size={20} color="#555" />
+            <TextInput
+              placeholder="Especialidade (ex: Pediatria)"
+              style={styles.input}
+              value={especialidade}
+              onChangeText={setEspecialidade}
+              onFocus={() => handleFocus("especialidade")}
+            />
+          </View>
+
+          <TouchableOpacity style={styles.inputContainer} onPress={() => setShowUbsPicker(true)}>
+            <Ionicons name="business-outline" size={20} color="#555" />
+            <Text style={[styles.input, { color: ubsId ? "#333" : "#aaa" }]}>
+              {ubsId ? ubsList.find((u) => u.id === ubsId)?.nome : "Selecione a UBS"}
+            </Text>
+            <Ionicons name="chevron-down-outline" size={18} color="#555" />
+          </TouchableOpacity>
+        </>
+      )}
+
       <TouchableOpacity
         style={styles.button}
         onPress={handleRegister}
@@ -181,7 +235,6 @@ export default function Register() {
       </TouchableOpacity>
 
 
-      {/* Voltar pro login */}
       <Text style={styles.registerText}>
         Já possui uma conta?{" "}
         <Text style={styles.link} onPress={() => router.navigate("/(auth)/login")}>
@@ -189,7 +242,50 @@ export default function Register() {
         </Text>
       </Text>
 
-      {/* Modal seletor de tipo */}
+      <View style={{ height: 120 }} />
+
+      <Modal visible={showUbsPicker} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowUbsPicker(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Selecione a UBS</Text>
+            {ubsList.map((u) => (
+              <TouchableOpacity
+                key={u.id}
+                style={[
+                  styles.modalOption,
+                  ubsId === u.id && styles.modalOptionAtivo,
+                ]}
+                onPress={() => {
+                  setUbsId(u.id)
+                  setShowUbsPicker(false)
+                }}
+              >
+                <Ionicons
+                  name="business-outline"
+                  size={20}
+                  color={ubsId === u.id ? "#4a90c2" : "#555"}
+                />
+                <Text
+                  style={[
+                    styles.modalOptionText,
+                    ubsId === u.id && styles.modalOptionTextAtivo,
+                  ]}
+                >
+                  {u.nome}
+                </Text>
+                {ubsId === u.id && (
+                  <Ionicons name="checkmark-outline" size={20} color="#4a90c2" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       <Modal visible={showDropdown} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -232,6 +328,7 @@ export default function Register() {
         </TouchableOpacity>
       </Modal>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -241,7 +338,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 50,
     padding: 30,
-    flex: 1
+    flexGrow: 1
   },
 
   logoContainer: {

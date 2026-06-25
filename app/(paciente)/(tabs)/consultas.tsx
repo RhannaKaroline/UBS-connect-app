@@ -1,380 +1,382 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
+import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Header } from "../../../components/shared";
+import { useAuthStore } from "../../../src/stores/auth-store";
+import {
+  agendarConsulta,
+  getHorariosDisponiveis,
+  getMedicos,
+} from "../../../src/lib/api-consultas";
 
-export default function Consultas() {
-  const router = useRouter();
+const mesesNome = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<any>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+function pad(n: number) {
+  return n.toString().padStart(2, "0");
+}
 
-  const times = [
-    "7:30 AM","08:00 AM","08:30 AM","09:00 AM",
-    "09:30 AM","10:00 AM","10:30 AM","11:30 AM",
-    "13:00 PM","13:30 PM","14:00 PM","14:30 PM",
-    "15:00 PM","15:30 PM","16:00 PM","16:30 PM",
-    "17:00 PM","17:30 PM"
-  ];
+export default function AgendarConsulta() {
+  const user = useAuthStore((s) => s.user);
+  const pacienteId = user?.id;
 
-  // 🔥 LIMPA TUDO AO SAIR DA TELA
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        setSelectedSpecialty(null);
-        setSelectedDate(null);
-        setSelectedTime(null);
-      };
-    }, [])
-  );
+  const [especialidadeSelecionada, setEspecialidadeSelecionada] = useState("");
+  const [mesSelecionado, setMesSelecionado] = useState(0);
+  const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null);
+  const [horarioSelecionado, setHorarioSelecionado] = useState("");
 
-  const generateDates = () => {
-    const days = [];
-    const today = new Date();
+  const { data: medicos, isLoading: loadingMedicos } = useQuery({
+    queryKey: ["medicos", pacienteId],
+    queryFn: () => getMedicos(pacienteId),
+    enabled: !!pacienteId,
+    retry: false,
+  });
 
-    for (let i = 0; i < 30; i++) {
-      const date = new Date();
-      date.setDate(today.getDate() + i);
+  const especialidades = useMemo(() => {
+    if (!medicos) return [];
+    const unique = [...new Set(medicos.map((m) => m.especialidade))];
+    return unique;
+  }, [medicos]);
 
-      days.push({
-        fullDate: date,
-        day: date.getDate(),
-        week: date.toLocaleDateString("pt-BR", { weekday: "short" }),
-      });
+  const medicosFiltrados = useMemo(() => {
+    if (!medicos || !especialidadeSelecionada) return [];
+    return medicos.filter((m) => m.especialidade === especialidadeSelecionada);
+  }, [medicos, especialidadeSelecionada]);
+
+  const meses = useMemo(() => {
+    const agora = new Date();
+    const lista: { index: number; nome: string; ano: number }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(agora.getFullYear(), agora.getMonth() + i, 1);
+      lista.push({ index: i, nome: mesesNome[d.getMonth()], ano: d.getFullYear() });
+    }
+    return lista;
+  }, []);
+
+  const dias = useMemo(() => {
+    if (!meses[mesSelecionado]) return [];
+    const { index, ano } = meses[mesSelecionado];
+    const agora = new Date();
+    const mesAtual = new Date(ano, (new Date().getMonth() + index) % 12, 1);
+    const anoInt = mesAtual.getFullYear();
+    const mesInt = mesAtual.getMonth();
+    const primeiroDia = index === 0 ? agora.getDate() : 1;
+    const ultimoDia = new Date(anoInt, mesInt + 1, 0).getDate();
+    const lista: { dia: number; nome: string }[] = [];
+    for (let d = primeiroDia; d <= ultimoDia; d++) {
+      const data = new Date(anoInt, mesInt, d);
+      lista.push({ dia: d, nome: diasSemana[data.getDay()] });
+    }
+    return lista;
+  }, [mesSelecionado, meses]);
+
+  const dataFormatada = useMemo(() => {
+    if (!diaSelecionado || !meses[mesSelecionado]) return "";
+    const { index, ano } = meses[mesSelecionado];
+    const mes = (new Date().getMonth() + index) % 12;
+    return `${ano}-${pad(mes + 1)}-${pad(diaSelecionado)}`;
+  }, [diaSelecionado, mesSelecionado, meses]);
+
+  const { data: horariosData, isLoading: loadingHorarios } = useQuery({
+    queryKey: ["horarios-disponiveis", dataFormatada],
+    queryFn: () => getHorariosDisponiveis(dataFormatada),
+    enabled: !!dataFormatada,
+    retry: false,
+  });
+
+  const horariosDisponiveis = horariosData?.horarios || [];
+
+  const handleConfirmar = async () => {
+    if (!especialidadeSelecionada) {
+      Alert.alert("Atenção", "Selecione uma especialidade");
+      return;
+    }
+    if (!diaSelecionado) {
+      Alert.alert("Atenção", "Selecione uma data");
+      return;
+    }
+    if (!horarioSelecionado) {
+      Alert.alert("Atenção", "Selecione um horário");
+      return;
+    }
+    if (!pacienteId) {
+      Alert.alert("Erro", "Usuário não identificado. Faça login novamente.");
+      return;
     }
 
-    return days;
+    try {
+      const data_hora = `${dataFormatada} ${horarioSelecionado}`;
+      const medico = medicosFiltrados.length > 0 ? medicosFiltrados[0] : undefined;
+
+      const consulta = await agendarConsulta({
+        paciente_id: pacienteId,
+        data_hora,
+        especialidade: especialidadeSelecionada,
+        medico_id: medico?.id,
+      });
+
+      router.replace({
+        pathname: "/sucesso",
+        params: {
+          id: consulta.id,
+          especialidade: consulta.especialidade,
+          data: consulta.data,
+          hora: consulta.hora,
+          medicoNome: consulta.medicoNome,
+          ubsNome: consulta.ubsNome,
+        },
+      });
+    } catch (error: any) {
+      const mensagem =
+        error?.response?.data?.erro || "Erro ao agendar consulta. Tente novamente.";
+      Alert.alert("Erro", mensagem);
+    }
   };
 
-  const dates = generateDates();
-
-  const currentMonth =
-    selectedDate?.fullDate.toLocaleDateString("pt-BR", {
-      month: "long",
-      year: "numeric",
-    }) ||
-    new Date().toLocaleDateString("pt-BR", {
-      month: "long",
-      year: "numeric",
-    });
-
-  function handleConfirm() {
-    if (!selectedSpecialty || !selectedDate || !selectedTime) return;
-
-    router.push({
-      pathname: "/sucesso",
-      params: {
-        date: selectedDate.fullDate.toLocaleDateString("pt-BR"),
-        time: selectedTime,
-        specialty: selectedSpecialty,
-      },
-    });
-  }
-
   return (
-    <ScrollView style={styles.container}>
-
-      {/* HEADER COM VOLTAR FUNCIONANDO */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("/")}>
-          <Ionicons name="arrow-back-outline" size={24} />
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Consultas</Text>
-      </View>
-
-      {/* ESPECIALIDADES */}
-      <Text style={styles.subtitle}>Agendar uma consulta?</Text>
-      <Text style={styles.label}>Escolha uma especialidade</Text>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <Specialty
-          icon="stethoscope"
-          title="Clínica Geral"
-          selected={selectedSpecialty === "clinica"}
-          onPress={() =>
-            setSelectedSpecialty(
-              selectedSpecialty === "clinica" ? null : "clinica"
-            )
-          }
-        />
-
-        <Specialty
-          icon="tooth-outline"
-          title="Odontologia"
-          selected={selectedSpecialty === "odonto"}
-          onPress={() =>
-            setSelectedSpecialty(
-              selectedSpecialty === "odonto" ? null : "odonto"
-            )
-          }
-        />
-
-        <Specialty
-          icon="needle"
-          title="Vacinação"
-          selected={selectedSpecialty === "vacina"}
-          onPress={() =>
-            setSelectedSpecialty(
-              selectedSpecialty === "vacina" ? null : "vacina"
-            )
-          }
-        />
-
-        <Specialty
-          icon="baby-face-outline"
-          title="Pediatria"
-          selected={selectedSpecialty === "pediatria"}
-          onPress={() =>
-            setSelectedSpecialty(
-              selectedSpecialty === "pediatria" ? null : "pediatria"
-            )
-          }
-        />
-      </ScrollView>
-
-      {!selectedSpecialty && (
-        <Text style={styles.warning}>
-          Selecione uma especialidade para continuar
-        </Text>
-      )}
-
-      {/* CALENDÁRIO */}
-      {selectedSpecialty && (
-        <>
-          <Text style={styles.section}>{currentMonth}</Text>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {dates.map((item, index) => {
-              const isSelected =
-                selectedDate?.fullDate.toDateString() ===
-                item.fullDate.toDateString();
-
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.dateBox, isSelected && styles.selectedDate]}
-                  onPress={() => setSelectedDate(item)}
-                >
-                  <Text style={styles.weekText}>{item.week}</Text>
-                  <Text style={styles.dayText}>{item.day}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          {/* HORÁRIOS */}
-          <Text style={styles.section}>Selecione um Horário</Text>
-
-          <View style={styles.timeContainer}>
-            {times.map((time) => {
-              const isSelected = selectedTime === time;
-
-              return (
-                <TouchableOpacity
-                  key={time}
-                  style={[styles.timeBox, isSelected && styles.selectedTime]}
-                  onPress={() => setSelectedTime(time)}
-                >
-                  <Text
-                    style={{ color: isSelected ? "#fff" : "#000" }}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                  >
-                    {time}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </>
-      )}
-
-      {/* INFO */}
-      {selectedDate && selectedTime && (
-        <View style={styles.infoBox}>
-          <Text style={{ fontWeight: "bold", textTransform: "capitalize" }}>
-            {selectedDate.fullDate.toLocaleDateString("pt-BR", {
-              weekday: "long",
-            })}
-          </Text>
-          <Text>{selectedDate.fullDate.toLocaleDateString("pt-BR")}</Text>
-          <Text>Horário disponível às {selectedTime}</Text>
-        </View>
-      )}
-
-      {/* BOTÃO */}
-      {selectedDate && selectedTime && (
-        <>
-          <Text style={styles.patient}>Paciente</Text>
-          <Text>CPF 000.000.000-00</Text>
-
-          <TouchableOpacity style={styles.button} onPress={handleConfirm}>
-            <Text style={styles.buttonText}>Confirmar Agendamento</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </ScrollView>
-  );
-}
-
-/* COMPONENTE ESPECIALIDADE */
-function Specialty({ icon, title, selected, onPress }: any) {
-  return (
-    <TouchableOpacity
-      style={[styles.specialty, selected && styles.selectedSpecialty]}
-      onPress={onPress}
-    >
-      <MaterialCommunityIcons
-        name={icon}
-        size={26}
-        color={selected ? "#fff" : "#000"}
+    <View style={styles.container}>
+      <Header
+        title="Consultas"
+        titleColor="#2b7bb9"
+        onBack={() => router.back()}
       />
 
-      <Text
-        style={{
-          fontSize: 12,
-          marginTop: 6,
-          textAlign: "center",
-          color: selected ? "#fff" : "#000",
-        }}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-      >
-        {title}
-      </Text>
-    </TouchableOpacity>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Agendar uma consulta?</Text>
+        <Text style={styles.subtitle}>Escolha uma especialidade</Text>
+
+        {loadingMedicos ? (
+          <ActivityIndicator size="small" color="#2b7bb9" style={{ margin: 16 }} />
+        ) : (
+          <View style={styles.especialidadesGrid}>
+            {especialidades.map((esp) => (
+              <TouchableOpacity
+                key={esp}
+                style={[
+                  styles.especialidadeCard,
+                  especialidadeSelecionada === esp && styles.especialidadeAtiva,
+                ]}
+                onPress={() => {
+                  setEspecialidadeSelecionada(esp);
+                  setHorarioSelecionado("");
+                }}
+              >
+                <Ionicons
+                  name="medical"
+                  size={28}
+                  color={especialidadeSelecionada === esp ? "#fff" : "#2b7bb9"}
+                />
+                <Text
+                  style={[
+                    styles.especialidadeText,
+                    especialidadeSelecionada === esp && styles.especialidadeTextAtiva,
+                  ]}
+                >
+                  {esp}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Data e Horários disponíveis</Text>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mesesScroll}>
+          {meses.map((mes, index) => (
+            <TouchableOpacity
+              key={`${mes.nome}-${mes.ano}`}
+              style={[
+                styles.mesButton,
+                mesSelecionado === index && styles.mesAtivo,
+              ]}
+              onPress={() => {
+                setMesSelecionado(index);
+                setDiaSelecionado(null);
+                setHorarioSelecionado("");
+              }}
+            >
+              <Text
+                style={[
+                  styles.mesText,
+                  mesSelecionado === index && styles.mesTextAtivo,
+                ]}
+              >
+                {mes.nome}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.diasScroll}>
+          {dias.map((d) => (
+            <TouchableOpacity
+              key={`${d.dia}-${mesSelecionado}`}
+              style={[
+                styles.diaButton,
+                diaSelecionado === d.dia && styles.diaAtivo,
+              ]}
+              onPress={() => {
+                setDiaSelecionado(d.dia);
+                setHorarioSelecionado("");
+              }}
+            >
+              <Text
+                style={[
+                  styles.diaNumero,
+                  diaSelecionado === d.dia && styles.diaNumeroAtivo,
+                ]}
+              >
+                {d.dia}
+              </Text>
+              <Text
+                style={[
+                  styles.diaNome,
+                  diaSelecionado === d.dia && styles.diaNomeAtivo,
+                ]}
+              >
+                {d.nome}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <Text style={styles.sectionTitle}>Selecione um Horário</Text>
+
+        {dataFormatada && loadingHorarios ? (
+          <ActivityIndicator size="small" color="#2b7bb9" style={{ margin: 16 }} />
+        ) : horariosDisponiveis.length > 0 ? (
+          <View style={styles.horariosGrid}>
+            {horariosDisponiveis.map((hora) => (
+              <TouchableOpacity
+                key={hora}
+                style={[
+                  styles.horarioButton,
+                  horarioSelecionado === hora && styles.horarioAtivo,
+                ]}
+                onPress={() => setHorarioSelecionado(hora)}
+              >
+                <Text
+                  style={[
+                    styles.horarioText,
+                    horarioSelecionado === hora && styles.horarioTextAtivo,
+                  ]}
+                >
+                  {hora}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : dataFormatada ? (
+          <Text style={styles.semHorarios}>Nenhum horário disponível nesta data.</Text>
+        ) : (
+          <Text style={styles.semHorarios}>Selecione uma data para ver os horários.</Text>
+        )}
+
+        {diaSelecionado && horarioSelecionado && (
+          <View style={styles.resumoCard}>
+            <Text style={styles.resumoTitle}>
+              {dias.find((d) => d.dia === diaSelecionado)?.nome}-Feira
+            </Text>
+            <Text style={styles.resumoData}>
+              {diaSelecionado} de {meses[mesSelecionado]?.nome} de {meses[mesSelecionado]?.ano}
+            </Text>
+            <Text style={styles.resumoHora}>
+              Horário às {horarioSelecionado}
+            </Text>
+            {medicosFiltrados.length > 0 && (
+              <>
+                <Text style={styles.resumoMedico}>
+                  Dr(a). {medicosFiltrados[0].nome}
+                </Text>
+                {medicosFiltrados[0].ubsNome && (
+                  <Text style={styles.resumoUbs}>
+                    {medicosFiltrados[0].ubsNome}
+                  </Text>
+                )}
+              </>
+            )}
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.confirmarButton} onPress={handleConfirmar}>
+          <Text style={styles.confirmarText}>Confirmar Agendamento</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
-/* STYLES */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f2f4f7",
-    padding: 16,
+  container: { flex: 1, backgroundColor: "#f2f4f7" },
+  sectionTitle: {
+    fontSize: 16, fontWeight: "600", color: "#333",
+    marginHorizontal: 16, marginTop: 16, marginBottom: 4, textDecorationLine: "underline",
   },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  subtitle: { fontSize: 14, color: "#666", marginHorizontal: 16, marginBottom: 12 },
+  especialidadesGrid: {
+    flexDirection: "row", flexWrap: "wrap",
+    justifyContent: "space-between", paddingHorizontal: 16, gap: 10,
   },
-
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#3a7ca5",
+  especialidadeCard: {
+    width: "22%", backgroundColor: "#fff", padding: 12, borderRadius: 12,
+    alignItems: "center", gap: 6, elevation: 2, borderWidth: 2, borderColor: "transparent",
   },
-
-  subtitle: {
-    marginTop: 10,
-    fontWeight: "bold",
+  especialidadeAtiva: { backgroundColor: "#2b7bb9", borderColor: "#2b7bb9" },
+  especialidadeText: { fontSize: 11, color: "#333", textAlign: "center", fontWeight: "500" },
+  especialidadeTextAtiva: { color: "#fff" },
+  mesesScroll: { paddingHorizontal: 16, marginBottom: 12 },
+  mesButton: { paddingHorizontal: 16, paddingVertical: 8, marginRight: 8, borderRadius: 20 },
+  mesAtivo: { backgroundColor: "#2b7bb9" },
+  mesText: { fontSize: 14, color: "#666", fontWeight: "500" },
+  mesTextAtivo: { color: "#fff" },
+  diasScroll: { paddingHorizontal: 16, marginBottom: 12 },
+  diaButton: {
+    width: 60, height: 70, backgroundColor: "#fff",
+    borderRadius: 12, justifyContent: "center", alignItems: "center",
+    marginRight: 8, elevation: 2,
   },
-
-  label: {
-    marginBottom: 10,
-    color: "#555",
+  diaAtivo: { backgroundColor: "#2b7bb9" },
+  diaNumero: { fontSize: 20, fontWeight: "600", color: "#333" },
+  diaNumeroAtivo: { color: "#fff" },
+  diaNome: { fontSize: 12, color: "#666", marginTop: 4 },
+  diaNomeAtivo: { color: "#fff" },
+  horariosGrid: {
+    flexDirection: "row", flexWrap: "wrap",
+    paddingHorizontal: 16, gap: 8, marginBottom: 16,
   },
-
-  warning: {
-    color: "red",
-    marginTop: 10,
+  horarioButton: {
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: "#fff", borderRadius: 8, borderWidth: 1, borderColor: "#ddd",
   },
-
-  specialty: {
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginRight: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 130,
+  horarioAtivo: { backgroundColor: "#2b7bb9", borderColor: "#2b7bb9" },
+  horarioText: { fontSize: 14, color: "#333" },
+  horarioTextAtivo: { color: "#fff" },
+  semHorarios: { fontSize: 14, color: "#999", marginHorizontal: 16, marginBottom: 16, fontStyle: "italic" },
+  resumoCard: {
+    backgroundColor: "#fff", marginHorizontal: 16, marginBottom: 12,
+    padding: 16, borderRadius: 12, elevation: 2,
   },
-
-  selectedSpecialty: {
-    backgroundColor: "#4a90c2",
+  resumoTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
+  resumoData: { fontSize: 15, color: "#333", marginTop: 4 },
+  resumoHora: { fontSize: 14, color: "#666", marginTop: 4 },
+  resumoMedico: { fontSize: 14, color: "#2b7bb9", marginTop: 4, fontWeight: "500" },
+  resumoUbs: { fontSize: 13, color: "#666", marginTop: 2 },
+  confirmarButton: {
+    backgroundColor: "#2b7bb9", marginHorizontal: 16, marginBottom: 32,
+    padding: 16, borderRadius: 12, alignItems: "center", elevation: 3,
   },
-
-  section: {
-    marginTop: 20,
-    marginBottom: 10,
-    fontWeight: "bold",
-    textTransform: "capitalize",
-  },
-
-  dateBox: {
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 10,
-    marginRight: 10,
-    alignItems: "center",
-    width: 70,
-  },
-
-  selectedDate: {
-    backgroundColor: "#4a90c2",
-  },
-
-  weekText: {
-    fontSize: 12,
-    color: "#555",
-  },
-
-  dayText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  timeContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-
-  timeBox: {
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-    width: "31%",
-    alignItems: "center",
-  },
-
-  selectedTime: {
-    backgroundColor: "#4a90c2",
-  },
-
-  infoBox: {
-    backgroundColor: "#e6e6e6",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
-  },
-
-  patient: {
-    marginTop: 15,
-    fontWeight: "bold",
-  },
-
-  button: {
-    backgroundColor: "#4a90c2",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
-    alignItems: "center",
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  confirmarText: { color: "#fff", fontSize: 16, fontWeight: "700" },
 });

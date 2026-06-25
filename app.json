@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ubs-connect-app",
+    "name": "UBS Connect",
     "slug": "ubs-connect-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ubsconnectapp"
     },
     "web": {
       "output": "static",
@@ -43,6 +44,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5470f7c0-e2e7-4c23-88ae-750a1631e054"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5470f7c0-e2e7-4c23-88ae-750a1631e054"
     }
   }
 }

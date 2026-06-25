@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -13,16 +13,59 @@ import {
 } from "react-native"
 import { useLogin } from "@/src/hooks/use-auth"
 import { useAuthStore } from "@/src/stores/auth-store"
+import api from "@/src/lib/api"
 
 export default function Login() {
   const router = useRouter()
-  const user = useAuthStore((s) => s.user)
+  const { token, user, login: storeLogin } = useAuthStore()
+  const [verificando, setVerificando] = useState(true)
 
   const [usuario, setUsuario] = useState("")
   const [senha, setSenha] = useState("")
   const [mostrarSenha, setMostrarSenha] = useState(false)
 
   const { mutate: login, isPending } = useLogin()
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function verificarToken() {
+      if (!token || !user) {
+        setVerificando(false)
+        return
+      }
+
+      try {
+        const response = await api.get("/me", {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 5000,
+        })
+        if (cancelled) return
+
+        const usuario = response.data.usuario
+        storeLogin(usuario, token)
+
+        const rotas: Record<string, string> = {
+          paciente: "/(paciente)/(tabs)",
+          medico: "/(medico)/(tabs)",
+          agente_saude: "/(agente)/(tabs)",
+          farmaceutico: "/(farmaceutico)/(tabs)",
+        }
+        const destino = rotas[usuario.tipo_usuario]
+        if (destino) {
+          router.replace(destino as any)
+        }
+      } catch {
+        useAuthStore.getState().logout()
+      } finally {
+        if (!cancelled) setVerificando(false)
+      }
+    }
+
+    verificarToken()
+
+    return () => { cancelled = true }
+  }, [])
 
   const handleLogin = () => {
     login(
@@ -51,9 +94,16 @@ export default function Login() {
     )
   };
 
+  if (verificando) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#8B5CF6" />
+      </View>
+    )
+  }
+
   return (
     <View style={styles.container}>
-      {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
           source={require("@/assets/images/logo-ubs.png")}
@@ -63,7 +113,6 @@ export default function Login() {
         <Text style={styles.title}>UBS Connect</Text>
       </View>
 
-      {/* Usuário */}
       <View style={styles.inputContainer}>
         <Ionicons name="person-outline" size={20} color="#555" />
         <TextInput
@@ -75,7 +124,6 @@ export default function Login() {
         />
       </View>
 
-      {/* Senha */}
       <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={20} color="#555" />
         <TextInput
@@ -94,22 +142,23 @@ export default function Login() {
         </TouchableOpacity>
       </View>
 
-      {/* Botão Login */}
       <TouchableOpacity
         style={styles.button}
         onPress={handleLogin}
 
       >
-        <Text style={styles.buttonText}>Entrar</Text>
+        {isPending ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Entrar</Text>
+        )}
       </TouchableOpacity>
 
-      {/* Ajuda */}
       <Text style={styles.helpText}>
         Esqueceu seus dados de login?{" "}
         <Text style={styles.link}>Obtenha ajuda para entrar</Text>
       </Text>
 
-      {/* Cadastro */}
       <TouchableOpacity
         onPress={() => router.navigate("/(auth)/register")}
         testID="Criar conta"

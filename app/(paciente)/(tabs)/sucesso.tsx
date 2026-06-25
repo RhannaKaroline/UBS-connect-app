@@ -1,162 +1,189 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Header } from "../../../components/shared";
+import { useAuthStore } from "../../../src/stores/auth-store";
 
-export default function Sucesso() {
-  const router = useRouter();
-  const { date, time, specialty } = useLocalSearchParams();
+export default function SucessoConsulta() {
+  const user = useAuthStore((s) => s.user);
+  const { especialidade, data, hora, medicoNome, ubsNome } = useLocalSearchParams<{
+    especialidade: string;
+    data: string;
+    hora: string;
+    medicoNome: string;
+    ubsNome: string;
+  }>();
 
   return (
     <View style={styles.container}>
+      <Header
+        title=""
+        onBack={() => router.back()}
+      />
 
-      {/* Voltar */}
-      <TouchableOpacity onPress={() => router.back()}>
-        <Ionicons name="arrow-back-outline" size={24} />
-      </TouchableOpacity>
+      <View style={styles.content}>
+        <View style={styles.successIcon}>
+          <Ionicons name="checkmark" size={60} color="#fff" />
+        </View>
 
-      {/* Ícone */}
-      <View style={styles.iconContainer}>
-        <Ionicons name="checkmark" size={60} color="#fff" />
+        <Text style={styles.title}>Sucesso</Text>
+        <Text style={styles.subtitle}>Consulta Agendada</Text>
+
+        <Text style={styles.infoLabel}>Informações</Text>
+
+        <View style={styles.infoGrid}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoTitle}>Nome</Text>
+            <Text style={styles.infoValue}>{user?.nome || "Paciente"}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoTitle}>Data</Text>
+            <Text style={styles.infoValue}>{data || "08 de Abril"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoGrid}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoTitle}>Horário</Text>
+            <Text style={styles.infoValue}>{hora || "10:30"}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoTitle}>Profissional</Text>
+            <Text style={styles.infoValue}>{medicoNome || "Dr. Rodrigo"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoGrid}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoTitle}>Tipo de consulta</Text>
+            <Text style={styles.infoValue}>{especialidade || "Clínica-Geral"}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoTitle}>Local</Text>
+            <Text style={styles.infoValue}>{ubsNome || "UBS Nicolau"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.orientacaoCard}>
+          <Text style={styles.orientacaoTitle}>Orientação</Text>
+          <Text style={styles.orientacaoText}>
+            Chegar 15 minutos antes para realizar a triagem
+          </Text>
+        </View>
+
+        <View style={styles.logoContainer}>
+          <Ionicons name="medical" size={30} color="#2b7bb9" />
+          <Text style={styles.logoText}>UBS Connect</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.replace("/(paciente)/(tabs)/historico")}
+        >
+          <Text style={styles.buttonText}>Minhas Consultas</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Título */}
-      <Text style={styles.title}>Sucesso</Text>
-      <Text style={styles.subtitle}>Consulta Agendada</Text>
-
-      {/* Informações */}
-      <Text style={styles.section}>Informações</Text>
-
-      <View style={styles.grid}>
-        <Info label="Nome" value="Paciente" />
-        <Info label="Data" value={date} />
-
-        <Info label="Horário" value={formatTime(time)} />
-        <Info label="Profissional" value="Dr. Rodrigo" />
-
-        <Info label="Tipo de consulta" value={formatSpecialty(specialty)} />
-        <Info label="Local" value="UBS Nicolas" />
-      </View>
-
-      {/* Orientação */}
-      <View style={{ marginTop: 20 }}>
-        <Text style={styles.section}>Orientação</Text>
-        <Text style={styles.text}>
-          Chegar 15 minutos antes para realizar a triagem
-        </Text>
-      </View>
-
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("@/assets/images/logo-ubs.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.appName}>UBS Connect</Text>
-      </View>
-
     </View>
   );
-}
-
-function Info({ label, value }: any) {
-  return (
-    <View style={{ width: "48%", marginBottom: 15 }}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
-    </View>
-  );
-}
-
-function formatTime(time: any) {
-  if (!time) return "";
-  if (time.includes("AM")) return time.replace("AM", "da manhã");
-  if (time.includes("PM")) return time.replace("PM", "da tarde");
-  return time;
-}
-
-function formatSpecialty(spec: any) {
-  switch (spec) {
-    case "clinica":
-      return "Clínica - Geral";
-    case "odonto":
-      return "Odontologia";
-    case "vacina":
-      return "Vacinação";
-    case "pediatria":
-      return "Pediatria";
-    default:
-      return spec;
-  }
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#f2f4f7",
   },
-
-  iconContainer: {
-    backgroundColor: "#4a90c2",
+  content: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  successIcon: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    alignItems: "center",
+    backgroundColor: "#4a90c2",
     justifyContent: "center",
-    alignSelf: "center",
-    marginTop: 20,
+    alignItems: "center",
+    marginBottom: 16,
   },
-
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 10,
+    fontWeight: "700",
+    color: "#333",
   },
-
   subtitle: {
-    textAlign: "center",
-    color: "#555",
-    marginBottom: 20,
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 24,
   },
-
-  section: {
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#555",
+  infoLabel: {
+    fontSize: 14,
+    color: "#999",
+    marginBottom: 16,
   },
-
-  grid: {
+  infoGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 16,
   },
-
-  label: {
-    color: "#777",
-  },
-
-  value: {
-    fontWeight: "bold",
-  },
-
-  text: {
-    color: "#555",
-  },
-
-  logoContainer: {
-    marginTop: 40,
+  infoItem: {
+    flex: 1,
     alignItems: "center",
   },
-
-  logo: {
-    width: 120,
-    height: 80,
+  infoTitle: {
+    fontSize: 13,
+    color: "#999",
+    marginBottom: 4,
   },
-
-  appName: {
-    fontWeight: "bold",
-    marginTop: 5,
+  infoValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#333",
+  },
+  orientacaoCard: {
+    width: "100%",
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    elevation: 2,
+  },
+  orientacaoTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  orientacaoText: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 32,
+  },
+  logoText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2b7bb9",
+  },
+  button: {
+    backgroundColor: "#2b7bb9",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    marginTop: 24,
+    width: "100%",
+    alignItems: "center",
+    elevation: 3,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

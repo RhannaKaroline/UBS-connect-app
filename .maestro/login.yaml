@@ -1,9 +1,0 @@
-appId: host.exp.exponent
----
-- runFlow: _restart.yaml
-- tapOn: "Usuário"
-- inputText: "12345678901"
-- tapOn: "Senha"
-- inputText: "123456"
-- hideKeyboard
-- tapOn: "Entrar"

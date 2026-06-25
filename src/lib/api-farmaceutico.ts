@@ -20,11 +20,22 @@ export interface Medicamento {
   }>;
 }
 
+export interface UBS {
+  id: number;
+  nome: string;
+  endereco: string;
+}
+
 export interface EstatisticasFarmacia {
   totalMedicamentos: number;
   itensEmEstoque: number;
   estoqueBaixo: number;
   indisponiveis: number;
+}
+
+export async function getUBS(): Promise<UBS[]> {
+  const response = await api.get("/ubs");
+  return response.data;
 }
 
 function transformarMedicamento(item: any): Medicamento {
@@ -80,6 +91,7 @@ export async function criarMedicamento(dados: {
   registroAnvisa: string;
   estoqueInicial: number;
   status: string;
+  ubsIds?: number[];
 }): Promise<Medicamento> {
   const response = await api.post("/farmaceutico/medicamentos", dados);
   return transformarMedicamento(response.data.medicamento);

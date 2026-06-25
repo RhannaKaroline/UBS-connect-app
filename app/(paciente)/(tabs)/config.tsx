@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useAuthStore } from "../../../src/stores/auth-store";
 
-export default function ConfiguracoesFarmaceutico() {
+export default function ConfigPaciente() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
@@ -18,25 +18,23 @@ export default function ConfiguracoesFarmaceutico() {
     router.replace("/(auth)/login");
   };
 
-  const registroLabel = user?.registro ? `CRF ${user.registro}` : "Farmacêutico";
+  const cpfFormatado = user?.cpf
+    ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+    : "CPF não informado";
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
         <Text style={styles.titulo}>Configurações</Text>
-        <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.card}>
         <View style={styles.avatar}>
-          <Ionicons name="person" size={30} color="#F59E0B" />
+          <Ionicons name="person" size={30} color="#4a90c2" />
         </View>
         <View style={styles.info}>
-          <Text style={styles.nome}>{user?.nome || "Farmacêutico"}</Text>
-          <Text style={styles.crf}>{registroLabel}</Text>
+          <Text style={styles.nome}>{user?.nome || "Paciente"}</Text>
+          <Text style={styles.cpf}>{cpfFormatado}</Text>
         </View>
       </View>
 
@@ -57,15 +55,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f2f4f7",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
   },
   titulo: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#F59E0B",
+    color: "#4a90c2",
   },
   card: {
     backgroundColor: "#fff",
@@ -81,7 +76,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 60,
     height: 60,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#e0f2fe",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
@@ -94,7 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  crf: {
+  cpf: {
     fontSize: 14,
     color: "#666",
     marginTop: 4,

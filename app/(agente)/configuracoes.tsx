@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuthStore } from "../../../src/stores/auth-store";
+import { useAuthStore } from "../../src/stores/auth-store";
 
-export default function ConfiguracoesFarmaceutico() {
+export default function ConfiguracoesAgente() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
@@ -18,7 +18,7 @@ export default function ConfiguracoesFarmaceutico() {
     router.replace("/(auth)/login");
   };
 
-  const registroLabel = user?.registro ? `CRF ${user.registro}` : "Farmacêutico";
+  const registroLabel = user?.registro ? `ACS ${user.registro}` : "Agente Comunitário de Saúde";
 
   return (
     <View style={styles.container}>
@@ -32,11 +32,11 @@ export default function ConfiguracoesFarmaceutico() {
 
       <View style={styles.card}>
         <View style={styles.avatar}>
-          <Ionicons name="person" size={30} color="#F59E0B" />
+          <Ionicons name="person" size={30} color="#8B5CF6" />
         </View>
         <View style={styles.info}>
-          <Text style={styles.nome}>{user?.nome || "Farmacêutico"}</Text>
-          <Text style={styles.crf}>{registroLabel}</Text>
+          <Text style={styles.nome}>{user?.nome || "Agente"}</Text>
+          <Text style={styles.registro}>{registroLabel}</Text>
         </View>
       </View>
 
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   titulo: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#F59E0B",
+    color: "#8B5CF6",
   },
   card: {
     backgroundColor: "#fff",
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 60,
     height: 60,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#F3E8FF",
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  crf: {
+  registro: {
     fontSize: 14,
     color: "#666",
     marginTop: 4,
